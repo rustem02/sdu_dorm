@@ -1,22 +1,28 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from .models import User, Faculty, Specialty
+from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
 
-from .models import User
-
-
-# надо доделать
 class CustomUserCreationForm(UserCreationForm):
-    birth_date = forms.DateField(required=False)
-    id_number = forms.CharField(max_length=20, required=False)
-    faculty = forms.IntegerField(required=False)
-    specialty = forms.IntegerField(required=False)
-    gender = forms.CharField(max_length=10, required=False)
+    class Meta(UserCreationForm.Meta):
+        model = get_user_model()  # Используем get_user_model вместо прямого указания модели
+        # Укажите все поля, которые вы хотите включить в форму регистрации, кроме 'password1' и 'password2', которые уже включены по умолчанию.
+        fields = UserCreationForm.Meta.fields + ('email', 'first_name', 'last_name', 'birth_date', 'id_number', 'faculty', 'specialty', 'gender',)
+    # Определения полей и Meta класс...
 
-    class Meta:
-        model = User
-        fields = ['username', 'password1', 'password2', 'email', 'first_name', 'last_name', 'birth_date', 'id_number', 'faculty', 'specialty', 'gender']
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        faculty_id = self.cleaned_data.get('faculty')
+        specialty_id = self.cleaned_data.get('specialty')
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['password1'].help_text = None
-        self.fields['password2'].help_text = None
+        if faculty_id:
+            user.faculty_id = faculty_id  # Присваиваем ID напрямую
+
+        if specialty_id:
+            user.specialty_id = specialty_id  # Аналогично для специальности
+
+        if commit:
+            user.save()
+        return user
+

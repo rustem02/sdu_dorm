@@ -1,26 +1,57 @@
+from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import render, redirect
 
 from .forms import CustomUserCreationForm
-from .models import User, Room, Booking
-from django.http import JsonResponse
+from .models import *
 from django.contrib.auth import login, authenticate
+import json
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.forms import AuthenticationForm
-# from .forms import UserCreationForm
+from django.views.decorators.http import require_http_methods
 
 
 @csrf_exempt
+@require_http_methods(["POST"])
 def register(request):
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return JsonResponse({'status': 'Registration successful!'})
-        else:
-            return JsonResponse({'errors': form.errors}, status=400)
-    elif request.method == 'GET':
-        return JsonResponse({'status': 'GET request received for registration view'})
+    # Парсинг JSON-данных из тела запроса
+    data = json.loads(request.body)
+
+    # Создание формы с данными из запроса
+    form = CustomUserCreationForm(data)
+
+    # Проверка валидности формы
+    if form.is_valid():
+        # Создание но не сохранение нового пользователя
+        user = form.save(commit=False)
+
+        # Обработка и присвоение экземпляров Faculty и Specialty если они предоставлены
+        faculty_id = data.get('faculty')
+        specialty_id = data.get('specialty')
+
+        if faculty_id:
+            try:
+                faculty = Faculty.objects.get(id=faculty_id)
+                user.faculty = faculty
+            except Faculty.DoesNotExist:
+                return JsonResponse({"status": "error", "errors": {"faculty": ["Faculty not found."]}}, status=400)
+
+        if specialty_id:
+            try:
+                specialty = Specialty.objects.get(id=specialty_id)
+                user.specialty = specialty
+            except Specialty.DoesNotExist:
+                return JsonResponse({"status": "error", "errors": {"specialty": ["Specialty not found."]}}, status=400)
+
+        # Сохранение пользователя после обработки всех полей
+        user.save()
+
+        # Не забудьте сохранить форму m2m данных если это необходимо
+        form.save_m2m()
+
+        return JsonResponse({"status": "success", "user_id": user.id}, status=201)
+    else:
+        # Возврат ошибок, если данные невалидны
+        return JsonResponse({"status": "error", "errors": form.errors}, status=400)
 
 @csrf_exempt
 def login_view(request):
