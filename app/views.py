@@ -8,13 +8,15 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-
+from rest_framework.permissions import IsAuthenticated
+from .models import Booking
+from .serializers import BookingSerializer
 
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from rest_framework import status
+from rest_framework import status, generics
 from django.contrib.auth import login
 from .serializers import LoginSerializer
 
@@ -85,7 +87,8 @@ def register(request):
 #     elif request.method == 'GET':
 #         return JsonResponse({'status': 'GET request received for login view'})
 
-
+@csrf_exempt
+@require_http_methods(["POST"])
 def book_room(request, room_id):
     # Получаем текущего пользователя (предполагается, что пользователь авторизован)
     user = request.user
@@ -114,3 +117,12 @@ def book_room(request, room_id):
             return render(request, 'already_booked.html')
     else:
         return render(request, 'unauthorized_booking.html')
+
+
+class BookingCreateAPIView(generics.CreateAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

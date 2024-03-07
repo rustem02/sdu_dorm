@@ -6,6 +6,7 @@ urlpatterns = [
     path('book_room/<int:room_id>/', book_room, name='book_room'),
     path('register/', register, name='register'),
     path('api/login/', LoginAPIView.as_view(), name='api_login'),
+    path('api/bookings/', BookingCreateAPIView.as_view(), name='booking-create'),
     # path('login/', login_view, name='login'),
     # path('api/users/', views.UserListView.as_view(), name='user-list'),
     #
