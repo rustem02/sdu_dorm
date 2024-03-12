@@ -20,9 +20,11 @@ from rest_framework import status, generics
 from django.contrib.auth import login
 from .serializers import LoginSerializer
 
+
 class LoginAPIView(APIView):
     permission_classes = (AllowAny,)
 
+    @csrf_exempt
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():

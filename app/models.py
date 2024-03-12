@@ -1,8 +1,13 @@
-from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.contrib.auth.models import AbstractUser, Group, Permission, BaseUserManager, PermissionsMixin, AbstractBaseUser
 from django.db import models
-
-class Role(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+from django.conf import settings
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+# class Role(models.Model):
+#     name = models.CharField(max_length=50, unique=True)
+#
+#     def __str__(self):
+#         return self.name
 
 
 class Faculty(models.Model):
@@ -18,76 +23,160 @@ class Specialty(models.Model):
     def __str__(self):
         return self.name
 
-class User(AbstractUser):
-    # Добавьте дополнительные поля, если необходимо
-    # student_id = models.AutoField(primary_key=True)
+# class User(AbstractUser):
+#     # Добавьте дополнительные поля, если необходимо
+#     # student_id = models.AutoField(primary_key=True)
+#     first_name = models.CharField(max_length=255)
+#     last_name = models.CharField(max_length=255)
+#     birth_date = models.DateField(null=True, blank=True)
+#     id_number = models.CharField(max_length=20, null=True, blank=True)
+#     faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, related_name='faculty_users')
+#     specialty = models.ForeignKey(Specialty, on_delete=models.SET_NULL, null=True, related_name='specialty_users')
+#     gender = models.CharField(max_length=10, null=True, blank=True)
+#     # role = models.ForeignKey(Role, on_delete=models.CASCADE, null=True, blank=True)
+#     is_admin = models.BooleanField(default=False)
+#     is_active = models.BooleanField(default=True)
+#     is_dorm = models.BooleanField(default=False)
+#
+#     class Meta:
+#         # Добавляем уникальный ограничивающий индекс для полей, которые есть и в auth.User
+#         unique_together = ['id', 'username']
+#
+#     # Убеждаемся, что связанные имена не пересекаются с auth.User
+#     groups = models.ManyToManyField(Group, related_name='custom_user_set', blank=True)
+#     user_permissions = models.ManyToManyField(Permission, related_name='custom_user_set', blank=True)
+
+
+
+
+# Менеджер пользователей
+class UserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError(_('The Email must be set'))
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError(_('Superuser must have is_staff=True.'))
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError(_('Superuser must have is_superuser=True.'))
+
+        return self.create_user(email, password, **extra_fields)
+
+# Пользовательская модель
+class User(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(_('email address'), unique=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     birth_date = models.DateField(null=True, blank=True)
     id_number = models.CharField(max_length=20, null=True, blank=True)
-    faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, related_name='faculty_users')
-    specialty = models.ForeignKey(Specialty, on_delete=models.SET_NULL, null=True, related_name='specialty_users')
+    faculty = models.ForeignKey('Faculty', on_delete=models.SET_NULL, null=True, related_name='faculty_users')
+    specialty = models.ForeignKey('Specialty', on_delete=models.SET_NULL, null=True, related_name='specialty_users')
     gender = models.CharField(max_length=10, null=True, blank=True)
-    role = models.ForeignKey(Role, on_delete=models.CASCADE, null=True, blank=True)
+    is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_dorm = models.BooleanField(default=False)
 
-    class Meta:
-        # Добавляем уникальный ограничивающий индекс для полей, которые есть и в auth.User
-        unique_together = ['id', 'username']
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
 
-    # Убеждаемся, что связанные имена не пересекаются с auth.User
-    groups = models.ManyToManyField(Group, related_name='custom_user_set', blank=True)
-    user_permissions = models.ManyToManyField(Permission, related_name='custom_user_set', blank=True)
+    objects = UserManager()
+
+    class Meta:
+        unique_together = [['id', 'email']]
+
+    def __str__(self):
+        return self.email
+
 
 class SubmissionDocuments(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    statement = models.BooleanField()
-    photo_3x4 = models.BooleanField()
-    form_075 = models.BooleanField()
-    identity_card_copy = models.BooleanField()
-    power_of_attorney = models.BooleanField()
-    address_certificate = models.BooleanField()
-    university_admission_form = models.BooleanField()
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='submission_documents')
+    statement = models.FileField(upload_to='documents/statement/', null=True, blank=True)
+    photo_3x4 = models.FileField(upload_to='documents/photo_3x4/', null=True, blank=True)
+    form_075 = models.FileField(upload_to='documents/form_075/', null=True, blank=True)
+    identity_card_copy = models.FileField(upload_to='documents/identity_card/', null=True, blank=True)
+    # Добавьте дополнительные поля FileField по необходимости
+    # Дополнительно можно добавить поле статуса для каждого документа
+
+    def __str__(self):
+        return f"Documents for {self.user.email}"
+
+# class SubmissionDocuments(models.Model):
+#     DOCUMENT_STATUS_CHOICES = (
+#         ('not_submitted', 'Not Submitted'),
+#         ('submitted', 'Submitted'),
+#         ('verified', 'Verified'),
+#     )
+#
+#     user = models.OneToOneField(User, on_delete=models.CASCADE)
+#     statement_status = models.CharField(max_length=12, choices=DOCUMENT_STATUS_CHOICES, default='not_submitted')
+#     photo_status = models.CharField(max_length=12, choices=DOCUMENT_STATUS_CHOICES, default='not_submitted')
+#     form_075_status = models.CharField(max_length=12, choices=DOCUMENT_STATUS_CHOICES, default='not_submitted')
+#     # Повторите для других документов
+
 
 class Room(models.Model):
-    BlockID = models.IntegerField()
-    RoomID = models.IntegerField()
-    SeatID = models.IntegerField()
-    TotalSeats = models.IntegerField()
-    AvailableSeats = models.IntegerField()
-    ReservedSeats = models.IntegerField(primary_key=True)
+    BLOCK_CHOICES = (
+        ('A', 'Block A'),
+        ('B', 'Block B'),
+        ('C', 'Block C'),
+        ('D', 'Block D'),
+    )
+
+    block = models.CharField(max_length=1, choices=BLOCK_CHOICES)
+    room_number = models.IntegerField()  # Изменил RoomID на room_number для ясности
+    total_seats = models.IntegerField()
+    available_seats = models.IntegerField()
+    reserved_seats = models.IntegerField()
+
+    def __str__(self):
+        return f'{self.block} - Room {self.room_number}'
+
 
 class Booking(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
-    bookingID = models.AutoField(primary_key=True)
-    requiredDocs = models.BooleanField()
-    verification_code_entry_field = models.CharField(max_length=20)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='bookings')
     start_date = models.DateField()
     end_date = models.DateField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+                                      # default=timezone.now
+                                      )
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f'Booking by {self.user.username} from {self.start_date} to {self.end_date}'
+        return f'Booking by {self.user.email} from {self.start_date} to {self.end_date}'
 
 
 class Payment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='payments', null=True, blank=True)
     card_number = models.CharField(max_length=16)
     expiration_month = models.IntegerField()
     expiration_year = models.IntegerField()
     cvv = models.IntegerField()
-    email = models.EmailField(max_length=255)
+    email = models.EmailField()
     telephone_number = models.CharField(max_length=15)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'Payment for Booking ID {self.booking.id} by {self.user.email}'
 
 class News(models.Model):
-    NewsID = models.AutoField(primary_key=True)
-    Title = models.CharField(max_length=255)
-    Content = models.TextField()
-    DatePublished = models.DateField()
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    file = models.FileField(upload_to='news/file/', null=True, blank=True)
+    datePublished = models.DateField(
+        auto_now_add=True,
+    )
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news')
 
     def save(self, *args, **kwargs):
         if self.author.role.name == 'Admin':
@@ -95,7 +184,13 @@ class News(models.Model):
         else:
             raise ValueError("Only Admins can create News")
 
+    def __str__(self):
+        return self.title
+
 class Review(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
     comment = models.TextField()
-    datePublished = models.DateField()
+    datePublished = models.DateField(auto_now_add=True,)
+
+    def __str__(self):
+        return f'Review by {self.user.email}'

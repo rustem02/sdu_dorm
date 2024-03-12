@@ -71,7 +71,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'sdu_dorm.wsgi.application'
 
+MEDIA_URL = '/media/'
 
+# Путь к директории, где будут храниться медиа-файлы
+MEDIA_ROOT = BASE_DIR / 'media'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -107,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Almaty'
 
 USE_I18N = True
 
