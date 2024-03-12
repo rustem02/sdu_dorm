@@ -1,11 +1,15 @@
 from django.contrib import admin
 from django.urls import path
 from .views import *
+from django.conf.urls.static import static
+
 
 urlpatterns = [
     path('book_room/<int:room_id>/', book_room, name='book_room'),
     path('register/', register, name='register'),
-    path('login/', login_view, name='login'),
+    path('api/login/', LoginAPIView.as_view(), name='api_login'),
+    path('api/bookings/', BookingCreateAPIView.as_view(), name='booking-create'),
+    # path('login/', login_view, name='login'),
     # path('api/users/', views.UserListView.as_view(), name='user-list'),
     #
     # path('api/users/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
@@ -32,4 +36,4 @@ urlpatterns = [
     #
     # path('api/reviews/<int:user_id>/', views.ReviewDetailView.as_view(), name='review-detail'),
 
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

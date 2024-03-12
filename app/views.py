@@ -1,41 +1,84 @@
+from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import render, redirect
 
 from .forms import CustomUserCreationForm
-from .models import User, Room, Booking
+from .models import *
+# from django.contrib.auth import login, authenticate
+import json
 from django.http import JsonResponse
-from django.contrib.auth import login, authenticate
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.forms import AuthenticationForm
-# from .forms import UserCreationForm
+from django.views.decorators.http import require_http_methods
+from rest_framework.permissions import IsAuthenticated
+from .models import Booking
+from .serializers import BookingSerializer
 
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from rest_framework import status, generics
+from django.contrib.auth import login
+from .serializers import LoginSerializer
+from rest_framework.authtoken.models import Token
+
+class LoginAPIView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({"token": token.key}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @csrf_exempt
+@require_http_methods(["POST"])
 def register(request):
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return JsonResponse({'status': 'Registration successful!'})
-        else:
-            return JsonResponse({'errors': form.errors}, status=400)
-    elif request.method == 'GET':
-        return JsonResponse({'status': 'GET request received for registration view'})
+    # Парсинг JSON-данных из тела запроса
+    data = json.loads(request.body)
+
+    # Создание формы с данными из запроса
+    form = CustomUserCreationForm(data)
+
+    # Проверка валидности формы
+    if form.is_valid():
+        # Создание но не сохранение нового пользователя
+        user = form.save(commit=False)
+
+        # Обработка и присвоение экземпляров Faculty и Specialty если они предоставлены
+        faculty_id = data.get('faculty')
+        specialty_id = data.get('specialty')
+
+        if faculty_id:
+            try:
+                faculty = Faculty.objects.get(id=faculty_id)
+                user.faculty = faculty
+            except Faculty.DoesNotExist:
+                return JsonResponse({"status": "error", "errors": {"faculty": ["Faculty not found."]}}, status=400)
+
+        if specialty_id:
+            try:
+                specialty = Specialty.objects.get(id=specialty_id)
+                user.specialty = specialty
+            except Specialty.DoesNotExist:
+                return JsonResponse({"status": "error", "errors": {"specialty": ["Specialty not found."]}}, status=400)
+
+        # Сохранение пользователя после обработки всех полей
+        user.save()
+
+        # Не забудьте сохранить форму m2m данных если это необходимо
+        form.save_m2m()
+
+        return JsonResponse({"status": "success", "user_id": user.id}, status=201)
+    else:
+        # Возврат ошибок, если данные невалидны
+        return JsonResponse({"status": "error", "errors": form.errors}, status=400)
+
+
 
 @csrf_exempt
-def login_view(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return JsonResponse({'status': 'Login successful!'})
-        else:
-            return JsonResponse({'errors': form.errors}, status=400)
-    elif request.method == 'GET':
-        return JsonResponse({'status': 'GET request received for login view'})
-
-
+@require_http_methods(["POST"])
 def book_room(request, room_id):
     # Получаем текущего пользователя (предполагается, что пользователь авторизован)
     user = request.user
@@ -64,3 +107,12 @@ def book_room(request, room_id):
             return render(request, 'already_booked.html')
     else:
         return render(request, 'unauthorized_booking.html')
+
+
+class BookingCreateAPIView(generics.CreateAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
