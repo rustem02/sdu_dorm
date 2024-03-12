@@ -3,12 +3,8 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-# class Role(models.Model):
-#     name = models.CharField(max_length=50, unique=True)
-#
-#     def __str__(self):
-#         return self.name
-
+from django.contrib.auth import get_user_model
+import uuid
 
 class Faculty(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -82,7 +78,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     specialty = models.ForeignKey('Specialty', on_delete=models.SET_NULL, null=True, related_name='specialty_users')
     gender = models.CharField(max_length=10, null=True, blank=True)
     is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_dorm = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
@@ -194,3 +190,11 @@ class Review(models.Model):
 
     def __str__(self):
         return f'Review by {self.user.email}'
+
+
+User = get_user_model()
+
+class EmailVerification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='email_verification')
+    verification_code = models.UUIDField(default=uuid.uuid4, editable=False)
+    verified = models.BooleanField(default=False)
