@@ -19,18 +19,17 @@ from rest_framework.permissions import AllowAny
 from rest_framework import status, generics
 from django.contrib.auth import login
 from .serializers import LoginSerializer
-
+from rest_framework.authtoken.models import Token
 
 class LoginAPIView(APIView):
     permission_classes = (AllowAny,)
 
-    @csrf_exempt
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data
-            login(request, user)
-            return Response({"detail": "Successfully logged in."}, status=status.HTTP_200_OK)
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({"token": token.key}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @csrf_exempt
@@ -76,18 +75,7 @@ def register(request):
         # Возврат ошибок, если данные невалидны
         return JsonResponse({"status": "error", "errors": form.errors}, status=400)
 
-# @csrf_exempt
-# def login_view(request):
-#     if request.method == 'POST':
-#         form = AuthenticationForm(request, data=request.POST)
-#         if form.is_valid():
-#             user = form.get_user()
-#             login(request, user)
-#             return JsonResponse({'status': 'Login successful!'})
-#         else:
-#             return JsonResponse({'errors': form.errors}, status=400)
-#     elif request.method == 'GET':
-#         return JsonResponse({'status': 'GET request received for login view'})
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
