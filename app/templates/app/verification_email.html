@@ -1,0 +1,23 @@
+<!-- templates/verification_email.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify Your Email</title>
+    <style>
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            text-decoration: none;
+            color: white;
+            background-color: #007BFF;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <p>Hello,</p>
+    <p>Please click the button below to verify your email address.</p>
+    <a href="{{ verification_url }}" class="button">Verify Email</a>
+    <p>Thank you!</p>
+</body>
+</html>

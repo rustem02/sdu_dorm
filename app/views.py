@@ -1,18 +1,13 @@
-from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import render, redirect
-
 from .forms import CustomUserCreationForm
 from .models import *
-# from django.contrib.auth import login, authenticate
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from rest_framework.permissions import IsAuthenticated
 from .models import Booking
-from .serializers import BookingSerializer
-
-
+from .serializers import *
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -20,6 +15,21 @@ from rest_framework import status, generics
 from django.contrib.auth import login
 from .serializers import LoginSerializer
 from rest_framework.authtoken.models import Token
+from django.core.mail import send_mail
+from django.urls import reverse
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
+
+
+class RegisterAPIView(APIView):
+    def post(self, request):
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            send_verification_email(user, request)  # Отправляем email после успешной регистрации
+            return Response({"detail": "User registered successfully. Please check your email to verify."}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginAPIView(APIView):
     permission_classes = (AllowAny,)
@@ -31,6 +41,45 @@ class LoginAPIView(APIView):
             token, created = Token.objects.get_or_create(user=user)
             return Response({"token": token.key}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+HOST_URL = 'http://127.0.0.1:8000/'
+
+
+def send_verification_email(user, request):
+    verification_code = str(user.email_verification.verification_code)
+    verification_url = request.build_absolute_uri(
+        reverse('verify_email', kwargs={'verification_code': verification_code}))
+
+    subject = 'Verify Your Email'
+    html_message = render_to_string('app/verification_email.html', {'verification_url': verification_url})
+    from_email = settings.DEFAULT_FROM_EMAIL
+    to_email = [user.email]
+    try:
+        email = EmailMessage(subject, html_message, from_email, to_email)
+        email.content_subtype = 'html'  # Это важно, чтобы письмо интерпретировалось как HTML
+        email.send()
+    except Exception as e:
+        print(f'Error sending email: {e}')
+
+
+def verify_email(request, verification_code):
+    try:
+        email_verification = EmailVerification.objects.get(verification_code=verification_code)
+        if email_verification.verified:
+            return HttpResponse('Email is already verified')
+        email_verification.verified = True
+        email_verification.user.is_active = True
+        email_verification.user.save()
+        email_verification.save()
+        # Теперь можете сгенерировать и отправить токен аутентификации пользователю
+        return HttpResponse('Email verified successfully')
+    except EmailVerification.DoesNotExist:
+        return HttpResponse('Invalid verification code', status=400)
+
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
