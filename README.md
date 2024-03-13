@@ -7,7 +7,7 @@
 4) Push to main branch with only PULL REQUESTS
 
 5) Для фронтендера:
-   1) скопироват команду ниже:
+   1) скопироват команду и вставить cmd:
       ``
          git clone https://github.com/rustem02/sdu_dorm.git -b test
       ``
