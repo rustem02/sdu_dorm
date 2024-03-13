@@ -34,16 +34,7 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("User is inactive.")
         return user
 
-# class BookingSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Booking
-#         fields = ['id', 'user', 'room', 'start_date', 'end_date']
-#         read_only_fields = ('user',)  # Пользователь будет устанавливаться автоматически
-#
-#     def create(self, validated_data):
-#         # Установка пользователя из контекста запроса
-#         validated_data['user'] = self.context['request'].user
-#         return super().create(validated_data)
+
 
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:

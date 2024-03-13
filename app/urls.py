@@ -8,8 +8,10 @@ urlpatterns = [
     path('book_room/<int:room_id>/', book_room, name='book_room'),
     path('register/', RegisterAPIView.as_view(), name='register'),
     path('api/login/', LoginAPIView.as_view(), name='api_login'),
+    path('api/logout/', LogoutAPIView.as_view(), name='logout'),
     path('verify-email/<uuid:verification_code>/', verify_email, name='verify_email'),
     path('api/bookings/', BookingCreateAPIView.as_view(), name='booking-create'),
+
 
     # path('api/users/', views.UserListView.as_view(), name='user-list'),
     #
