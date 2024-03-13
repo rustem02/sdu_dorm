@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from .forms import CustomUserCreationForm
 from .models import *
+from rest_framework import status, permissions
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -84,7 +85,7 @@ def verify_email(request, verification_code):
         email_verification.user.is_active = True
         email_verification.user.save()
         email_verification.save()
-        # Теперь можете сгенерировать и отправить токен аутентификации пользователю
+        # Генерация токена
         return HttpResponse('Email verified successfully')
     except EmailVerification.DoesNotExist:
         return HttpResponse('Invalid verification code', status=400)
@@ -175,3 +176,27 @@ class BookingCreateAPIView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class SubmissionDocumentsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            submission_documents = SubmissionDocuments.objects.get(user=user)
+        except SubmissionDocuments.DoesNotExist:
+            submission_documents = None
+
+        if submission_documents:
+            serializer = SubmissionDocumentsSerializer(submission_documents, data=request.data)
+        else:
+            serializer = SubmissionDocumentsSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=user)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

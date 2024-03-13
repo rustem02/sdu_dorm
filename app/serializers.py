@@ -17,7 +17,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             password=validated_data['password'],
             is_active=False,  # Пользователь не активен до верификации email
-            # Добавьте остальные поля
+            # Можно добавить остальные поля
         )
         EmailVerification.objects.create(user=user)  # Создание объекта EmailVerification
         return user
@@ -35,7 +35,7 @@ class LoginSerializer(serializers.Serializer):
         return user
 
 
-
+# Надо доделать!
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
@@ -60,3 +60,20 @@ class SubmissionDocumentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionDocuments
         fields = ['statement', 'photo_3x4', 'form_075', 'identity_card_copy']
+        extra_kwargs = {'statement': {'required': False}, 'photo_3x4': {'required': False},
+                        'form_075': {'required': False}, 'identity_card_copy': {'required': False}}
+
+    def update(self, instance, validated_data):
+        instance.statement = validated_data.get('statement', instance.statement)
+        instance.photo_3x4 = validated_data.get('photo_3x4', instance.photo_3x4)
+        instance.form_075 = validated_data.get('form_075', instance.form_075)
+        instance.identity_card_copy = validated_data.get('identity_card_copy', instance.identity_card_copy)
+        instance.save()
+
+        # Проверка наличия всех документов и обновление статуса в модели User
+        user = instance.user
+        if instance.statement and instance.photo_3x4 and instance.form_075 and instance.identity_card_copy:
+            user.is_doc_submitted = True
+            user.save()
+
+        return instance

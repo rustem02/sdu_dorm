@@ -5,11 +5,15 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
-    path('book_room/<int:room_id>/', book_room, name='book_room'),
+    # path('book_room/<int:room_id>/', book_room, name='book_room'),
+    # Auth
     path('register/', RegisterAPIView.as_view(), name='register'),
     path('api/login/', LoginAPIView.as_view(), name='api_login'),
     path('api/logout/', LogoutAPIView.as_view(), name='logout'),
     path('verify-email/<uuid:verification_code>/', verify_email, name='verify_email'),
+
+    # Submission documents
+    path('documents/upload/', SubmissionDocumentsView.as_view(), name='documents-upload'),
     path('api/bookings/', BookingCreateAPIView.as_view(), name='booking-create'),
 
 
