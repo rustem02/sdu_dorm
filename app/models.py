@@ -78,6 +78,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     specialty = models.ForeignKey('Specialty', on_delete=models.SET_NULL, null=True, related_name='specialty_users')
     gender = models.CharField(max_length=10, null=True, blank=True)
     is_staff = models.BooleanField(default=False)
+    is_doc_submitted = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     is_dorm = models.BooleanField(default=False)
 
@@ -99,8 +100,7 @@ class SubmissionDocuments(models.Model):
     photo_3x4 = models.FileField(upload_to='documents/photo_3x4/', null=True, blank=True)
     form_075 = models.FileField(upload_to='documents/form_075/', null=True, blank=True)
     identity_card_copy = models.FileField(upload_to='documents/identity_card/', null=True, blank=True)
-    # Добавьте дополнительные поля FileField по необходимости
-    # Дополнительно можно добавить поле статуса для каждого документа
+
 
     def __str__(self):
         return f"Documents for {self.user.email}"

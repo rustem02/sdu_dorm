@@ -1,25 +1,25 @@
 from django.shortcuts import render, redirect
 from .forms import CustomUserCreationForm
 from .models import *
+from rest_framework import status, permissions
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from rest_framework.permissions import IsAuthenticated
-from .models import Booking
 from .serializers import *
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import status, generics
-from django.contrib.auth import login
 from .serializers import LoginSerializer
 from rest_framework.authtoken.models import Token
-from django.core.mail import send_mail
 from django.urls import reverse
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
+from django.contrib.auth import logout
+from rest_framework.authentication import TokenAuthentication
 
 
 class RegisterAPIView(APIView):
@@ -43,7 +43,18 @@ class LoginAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# class LogoutAPIView(APIView):
+#     def post(self, request):
+#         logout(request)
+#         return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
 
+class LogoutAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        request.user.auth_token.delete()
+        return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
 
 HOST_URL = 'http://127.0.0.1:8000/'
 
@@ -74,7 +85,7 @@ def verify_email(request, verification_code):
         email_verification.user.is_active = True
         email_verification.user.save()
         email_verification.save()
-        # Теперь можете сгенерировать и отправить токен аутентификации пользователю
+        # Генерация токена
         return HttpResponse('Email verified successfully')
     except EmailVerification.DoesNotExist:
         return HttpResponse('Invalid verification code', status=400)
@@ -165,3 +176,27 @@ class BookingCreateAPIView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class SubmissionDocumentsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            submission_documents = SubmissionDocuments.objects.get(user=user)
+        except SubmissionDocuments.DoesNotExist:
+            submission_documents = None
+
+        if submission_documents:
+            serializer = SubmissionDocumentsSerializer(submission_documents, data=request.data)
+        else:
+            serializer = SubmissionDocumentsSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=user)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
