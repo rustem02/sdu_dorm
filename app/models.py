@@ -19,33 +19,7 @@ class Specialty(models.Model):
     def __str__(self):
         return self.name
 
-# class User(AbstractUser):
-#     # Добавьте дополнительные поля, если необходимо
-#     # student_id = models.AutoField(primary_key=True)
-#     first_name = models.CharField(max_length=255)
-#     last_name = models.CharField(max_length=255)
-#     birth_date = models.DateField(null=True, blank=True)
-#     id_number = models.CharField(max_length=20, null=True, blank=True)
-#     faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, related_name='faculty_users')
-#     specialty = models.ForeignKey(Specialty, on_delete=models.SET_NULL, null=True, related_name='specialty_users')
-#     gender = models.CharField(max_length=10, null=True, blank=True)
-#     # role = models.ForeignKey(Role, on_delete=models.CASCADE, null=True, blank=True)
-#     is_admin = models.BooleanField(default=False)
-#     is_active = models.BooleanField(default=True)
-#     is_dorm = models.BooleanField(default=False)
-#
-#     class Meta:
-#         # Добавляем уникальный ограничивающий индекс для полей, которые есть и в auth.User
-#         unique_together = ['id', 'username']
-#
-#     # Убеждаемся, что связанные имена не пересекаются с auth.User
-#     groups = models.ManyToManyField(Group, related_name='custom_user_set', blank=True)
-#     user_permissions = models.ManyToManyField(Permission, related_name='custom_user_set', blank=True)
 
-
-
-
-# Менеджер пользователей
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -198,12 +172,6 @@ class Transaction(models.Model):
         auto_now_add=True,
         # default=timezone.now
     )
-    # card_number = models.CharField(max_length=16)
-    # expiration_month = models.IntegerField()
-    # expiration_year = models.IntegerField()
-    # cvv = models.IntegerField()
-    # email = models.EmailField()
-    # telephone_number = models.CharField(max_length=15)
 
     def __str__(self):
         return f'Payment for Booking ID {self.booking.id} by {self.user.email}'

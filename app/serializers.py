@@ -31,7 +31,7 @@ class LoginSerializer(serializers.Serializer):
         if user is None:
             raise serializers.ValidationError("Invalid email/password.")
         if not user.is_active:
-            raise serializers.ValidationError("User is inactive.")
+            raise serializers.ValidationError("User is inactive. Please confirm email")
         return user
 
 
