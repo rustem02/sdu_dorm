@@ -21,6 +21,7 @@ urlpatterns = [
     # Booking
     path('api/bookings/', BookingCreateAPIView.as_view(), name='booking-create'),
     path('api/get-bookings/', BookingListView.as_view(), name='booking-list'),
+    path('cancel-booking/<int:booking_id>/', CancelBookingView.as_view(), name='cancel-booking'),
     path('api/available-seats/', AvailableSeatsListView.as_view(), name='available-seats'),
     # path('book_room/<int:room_id>/', book_room, name='book_room'),
 

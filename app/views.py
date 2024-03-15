@@ -119,7 +119,29 @@ class BookingListView(ListAPIView):
         метод для фильтрованных брони, чтобы пользователь видел только свои бронирования.
         """
         user = self.request.user
-        return Booking.objects.filter(user=user)
+        return Booking.objects.filter( is_active=True, user=user,)
+
+
+class CancelBookingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, booking_id):
+        booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+
+        # Проверяем, активно ли бронирование
+        if not booking.is_active:
+            return Response({"error": "This booking is already cancelled."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Отменяем бронирование
+        booking.is_active = False
+        booking.save()
+
+        # Делаем место снова доступным, если необходимо
+        seat = booking.seat
+        seat.is_reserved = False
+        seat.save()
+
+        return Response({"success": "Booking has been cancelled."}, status=status.HTTP_200_OK)
 
 
 
