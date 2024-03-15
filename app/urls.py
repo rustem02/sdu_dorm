@@ -1,14 +1,34 @@
 from django.contrib import admin
 from django.urls import path
 from .views import *
+from django.conf.urls.static import static
+
 
 urlpatterns = [
-    path('book_room/<int:room_id>/', book_room, name='book_room'),
-    path('register/', register, name='register'),
+    # Auth
+    path('api/register/', RegisterAPIView.as_view(), name='register'),
     path('api/login/', LoginAPIView.as_view(), name='api_login'),
+    path('api/logout/', LogoutAPIView.as_view(), name='logout'),
+    path('verify-email/<uuid:verification_code>/', verify_email, name='verify_email'),
+
+    # Submission documents
+    path('documents/upload/', SubmissionDocumentsView.as_view(), name='documents-upload'),
+    path('documents/get/', SubmissionDocumentsListView.as_view(), name='documents-list'),
+    # Нужны права администратора
+    path('user-documents/<int:pk>/', UserDocumentsByIDView.as_view(), name='user-documents-by-id'),
+
+
+    # Booking
     path('api/bookings/', BookingCreateAPIView.as_view(), name='booking-create'),
-    # path('login/', login_view, name='login'),
-    # path('api/users/', views.UserListView.as_view(), name='user-list'),
+    path('api/get-bookings/', BookingListView.as_view(), name='booking-list'),
+    path('cancel-booking/<int:booking_id>/', CancelBookingView.as_view(), name='cancel-booking'),
+    path('api/available-seats/', AvailableSeatsListView.as_view(), name='available-seats'),
+    # path('book_room/<int:room_id>/', book_room, name='book_room'),
+
+
+    path('api/users/', UserListView.as_view(), name='user-list'),
+    path('user-details/<int:user_id>/', UserDetailView.as_view(), name='user-details'),
+
     #
     # path('api/users/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
     #
@@ -34,4 +54,4 @@ urlpatterns = [
     #
     # path('api/reviews/<int:user_id>/', views.ReviewDetailView.as_view(), name='review-detail'),
 
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
