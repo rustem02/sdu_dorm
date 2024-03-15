@@ -26,7 +26,9 @@ urlpatterns = [
     # path('book_room/<int:room_id>/', book_room, name='book_room'),
 
 
-    # path('api/users/', views.UserListView.as_view(), name='user-list'),
+    path('api/users/', UserListView.as_view(), name='user-list'),
+    path('user-details/<int:user_id>/', UserDetailView.as_view(), name='user-details'),
+
     #
     # path('api/users/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
     #

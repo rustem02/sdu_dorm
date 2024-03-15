@@ -156,6 +156,26 @@ class AvailableSeatsListView(ListAPIView):
         return Seat.objects.filter(is_reserved=False)
 
 
+class UserListView(ListAPIView):
+    serializer_class = GetUserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Возвращает список пользователей.
+        """
+        return User.objects.filter(is_active=True)
+
+
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        user = User.objects.get(id=user_id)
+        serializer = UserDetailsSerializer(user)
+        return Response(serializer.data)
+
+
 
 class SubmissionDocumentsListView(ListAPIView):
     serializer_class = GetSubmissionDocumentSerializer

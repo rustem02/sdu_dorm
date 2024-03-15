@@ -17,6 +17,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             password=validated_data['password'],
             is_active=False,  # Пользователь не активен до верификации email
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            birth_date=validated_data['birth_date'],
+            id_number=validated_data['id_number'],
+            faculty=validated_data['faculty'],
+            specialty=validated_data['specialty'],
+            gender=validated_data['gender'],
             # Можно добавить остальные поля
         )
         EmailVerification.objects.create(user=user)  # Создание объекта EmailVerification
@@ -107,6 +114,36 @@ class GetSubmissionDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionDocuments
         fields = '__all__'
+
+
+class GetUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+
+
+class UserDetailsSerializer(serializers.ModelSerializer):
+    submission_documents = serializers.SerializerMethodField()
+    bookings = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'last_name', 'birth_date', 'id_number', 'faculty', 'specialty', 'gender', 'submission_documents', 'bookings']
+
+    def get_submission_documents(self, obj):
+        try:
+            documents = SubmissionDocuments.objects.get(user=obj)
+            return SubmissionDocumentsSerializer(documents).data
+        except SubmissionDocuments.DoesNotExist:
+            return "No documents submitted."
+
+    def get_bookings(self, obj):
+        bookings = Booking.objects.filter(user=obj)
+        if bookings.exists():
+            return BookingSerializer(bookings, many=True).data
+        else:
+            return "No bookings made."
+
 
 
 
