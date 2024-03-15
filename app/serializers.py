@@ -36,24 +36,78 @@ class LoginSerializer(serializers.Serializer):
 
 
 # Надо доделать!
+# class BookingSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Booking
+#         fields = ['user', 'room', 'start_date', 'end_date', 'created_at']
+#         read_only_fields = ('user', 'created_at')  # Защищаем некоторые поля от изменений
+#
+#     def create(self, validated_data):
+#         # Добавляем пользователя из контекста запроса
+#         validated_data['user'] = self.context['request'].user
+#         docs = self.context['request'].user.is_doc_submitted
+#         if docs == True:
+#             return super().create(validated_data)
+#         else:
+#             raise serializers.ValidationError("You need to submit documents")
+#
+#     def validate(self, data):
+#         """
+#         Валидация дат: начальная дата не может быть позже конечной.
+#         """
+#         if data['start_date'] > data['end_date']:
+#             raise serializers.ValidationError("End date must occur after start date")
+#         return data
+
 class BookingSerializer(serializers.ModelSerializer):
+    room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all())
+    seat = serializers.PrimaryKeyRelatedField(queryset=Seat.objects.all())
+
     class Meta:
         model = Booking
-        fields = ['bookingID', 'user', 'room', 'requiredDocs', 'verification_code_entry_field', 'start_date', 'end_date', 'created_at', 'is_active']
-        read_only_fields = ('user', 'created_at', 'bookingID')  # Защищаем некоторые поля от изменений
-
-    def create(self, validated_data):
-        # Добавляем пользователя из контекста запроса
-        validated_data['user'] = self.context['request'].user
-        return super().create(validated_data)
+        fields = ['user', 'room', 'seat', 'start_date', 'end_date']
+        read_only_fields = ('user',)
 
     def validate(self, data):
         """
-        Валидация дат: начальная дата не может быть позже конечной.
+        Проверяем, что место принадлежит выбранной комнате.
         """
-        if data['start_date'] > data['end_date']:
-            raise serializers.ValidationError("End date must occur after start date")
+        room = data.get('room')
+        seat = data.get('seat')
+        if seat.room != room:
+            raise serializers.ValidationError("The seat does not belong to the selected room.")
+        if seat.is_reserved:
+            raise serializers.ValidationError("This seat is already reserved.")
         return data
+
+    def create(self, validated_data):
+        # Устанавливаем место как зарезервированное
+        seat = validated_data['seat']
+        seat.is_reserved = True
+        seat.save()
+
+        # Проверка документов пользователя
+        user = self.context['request'].user
+        if not user.is_doc_submitted:
+            raise serializers.ValidationError("You need to submit documents before making a booking.")
+
+        booking = Booking.objects.create(**validated_data, user=user)
+        return booking
+
+
+
+class SeatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Seat
+        fields = '__all__'
+
+
+
+class GetSubmissionDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubmissionDocuments
+        fields = '__all__'
+
 
 
 class SubmissionDocumentsSerializer(serializers.ModelSerializer):

@@ -6,7 +6,7 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,  BasePermission
 from .serializers import *
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -20,9 +20,13 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 from django.contrib.auth import logout
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.generics import ListAPIView
+from rest_framework.generics import RetrieveAPIView
+from django.shortcuts import get_object_or_404
 
 
 class RegisterAPIView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
@@ -92,81 +96,6 @@ def verify_email(request, verification_code):
 
 
 
-@csrf_exempt
-@require_http_methods(["POST"])
-def register(request):
-    # Парсинг JSON-данных из тела запроса
-    data = json.loads(request.body)
-
-    # Создание формы с данными из запроса
-    form = CustomUserCreationForm(data)
-
-    # Проверка валидности формы
-    if form.is_valid():
-        # Создание но не сохранение нового пользователя
-        user = form.save(commit=False)
-
-        # Обработка и присвоение экземпляров Faculty и Specialty если они предоставлены
-        faculty_id = data.get('faculty')
-        specialty_id = data.get('specialty')
-
-        if faculty_id:
-            try:
-                faculty = Faculty.objects.get(id=faculty_id)
-                user.faculty = faculty
-            except Faculty.DoesNotExist:
-                return JsonResponse({"status": "error", "errors": {"faculty": ["Faculty not found."]}}, status=400)
-
-        if specialty_id:
-            try:
-                specialty = Specialty.objects.get(id=specialty_id)
-                user.specialty = specialty
-            except Specialty.DoesNotExist:
-                return JsonResponse({"status": "error", "errors": {"specialty": ["Specialty not found."]}}, status=400)
-
-        # Сохранение пользователя после обработки всех полей
-        user.save()
-
-        # Не забудьте сохранить форму m2m данных если это необходимо
-        form.save_m2m()
-
-        return JsonResponse({"status": "success", "user_id": user.id}, status=201)
-    else:
-        # Возврат ошибок, если данные невалидны
-        return JsonResponse({"status": "error", "errors": form.errors}, status=400)
-
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def book_room(request, room_id):
-    # Получаем текущего пользователя (предполагается, что пользователь авторизован)
-    user = request.user
-
-    # Получаем комнату, которую студент хочет забронировать
-    room = Room.objects.get(id=room_id)
-
-    # Проверяем, что пользователь активен и имеет роль "Student"
-    if user.is_active and user.role.name == 'Student':
-        # Проверяем, что у пользователя нет активного бронирования
-        if not Booking.objects.filter(user=user, is_active=True).exists():
-            # Создаем новое бронирование
-            booking = Booking.objects.create(user=user, room=room, requiredDocs=True, verification_code_entry_field="YourVerificationCodeHere")
-
-            # Уменьшаем количество доступных мест в комнате
-            room.AvailableSeats -= 1
-            room.ReservedSeats += 1
-            room.save()
-
-            # Помечаем пользователя как активного (забронировал место)
-            user.is_active = True
-            user.save()
-
-            return render(request, 'success_booking.html', {'booking': booking})
-        else:
-            return render(request, 'already_booked.html')
-    else:
-        return render(request, 'unauthorized_booking.html')
 
 
 class BookingCreateAPIView(generics.CreateAPIView):
@@ -175,7 +104,70 @@ class BookingCreateAPIView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+
+        # serializer.save(user=self.request.user)
+        serializer.save()
+
+
+class BookingListView(ListAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        метод для фильтрованных брони, чтобы пользователь видел только свои бронирования.
+        """
+        user = self.request.user
+        return Booking.objects.filter(user=user)
+
+
+
+class AvailableSeatsListView(ListAPIView):
+    serializer_class = SeatSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Возвращает список свободных мест.
+        """
+        return Seat.objects.filter(is_reserved=False)
+
+
+
+class SubmissionDocumentsListView(ListAPIView):
+    serializer_class = GetSubmissionDocumentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Возвращает список документов текущего пользователя.
+        """
+        user = self.request.user
+        return SubmissionDocuments.objects.filter(user=user)
+
+
+class IsOwnerOrAdmin(BasePermission):
+    """
+    Разрешение, которое позволяет доступ только владельцу ресурса или администратору.
+    """
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj.user or request.user.is_staff
+
+class UserDocumentsByIDView(RetrieveAPIView):
+    queryset = SubmissionDocuments.objects.all()
+    serializer_class = SubmissionDocumentsSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+
+    def get_object(self):
+        """
+        Возвращает документы для указанного ID пользователя.
+        """
+        user_id = self.kwargs['pk']
+        document = get_object_or_404(SubmissionDocuments, user__id=user_id)
+        self.check_object_permissions(self.request, document)
+        return document
+
 
 
 class SubmissionDocumentsView(APIView):
