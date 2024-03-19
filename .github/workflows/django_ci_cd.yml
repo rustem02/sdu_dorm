@@ -45,6 +45,11 @@ jobs:
     - name: Install Heroku CLI
       run: |
         curl https://cli-assets.heroku.com/install.sh | sh
+    - name: Setup Heroku remote
+      run: |
+        git remote add heroku https://git.heroku.com/sdudorm.git
+      env:
+        HEROKU_APP_NAME: your-heroku-app-name
     - name: Heroku deploy
       run: |
         git push heroku main
