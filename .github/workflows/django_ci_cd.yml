@@ -41,18 +41,17 @@ jobs:
     - name: Install Heroku CLI
       run: |
         curl https://cli-assets.heroku.com/install.sh | sh
-    - name: Setup SSH Keys and known_hosts
+    - name: Heroku Auth
       run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.HEROKU_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        eval "$(ssh-agent -s)"
-        ssh-add ~/.ssh/id_rsa
-        ssh-keyscan -H heroku.com >> ~/.ssh/known_hosts
+        heroku auth:token
+        heroku container:login
       env:
-        HEROKU_APP_NAME: sdudorm
-    - name: Heroku deploy
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+    - name: Push to Heroku
       run: |
-        git push git@heroku.com:sdudorm.git main
+        heroku container:push web -a sdudorm
+        heroku container:release web -a sdudorm
       env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         HEROKU_APP_NAME: sdudorm
+
