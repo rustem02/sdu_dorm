@@ -47,7 +47,6 @@ jobs:
         echo "${{ secrets.HEROKU_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H heroku.com >> ~/.ssh/known_hosts
-        ssh -v git@heroku.com
       env:
         HEROKU_APP_NAME: sdudorm
     - name: Heroku deploy
