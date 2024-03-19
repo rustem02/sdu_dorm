@@ -50,7 +50,7 @@ jobs:
         ls -la ~/.ssh
         cat ~/.ssh/id_rsa
       env:
-        HEROKU_APP_NAME: your-heroku-app-name
+        HEROKU_APP_NAME: sdudorm
 
     - name: Heroku deploy
       run: |
