@@ -41,16 +41,10 @@ jobs:
     - name: Install Heroku CLI
       run: |
         curl https://cli-assets.heroku.com/install.sh | sh
-    - name: Heroku Auth
+    - name: Deploy to Heroku
       run: |
-        heroku auth:token
-        heroku container:login
-      env:
-        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-    - name: Push to Heroku
-      run: |
-        heroku container:push web -a sdudorm
-        heroku container:release web -a sdudorm
+        heroku git:remote -a sdudorm
+        git push https://heroku:$HEROKU_API_KEY@git.heroku.com/sdudorm.git HEAD:master
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         HEROKU_APP_NAME: sdudorm
