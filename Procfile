@@ -1,4 +1,4 @@
-web: gunicorn sdu_dorm.wsgi
+web: gunicorn sdu_dorm.wsgi:application --log-file -
 
 # Uncomment this `release` process if you are using a database, so that Django's model
 # migrations are run as part of app deployment, using Heroku's Release Phase feature:
