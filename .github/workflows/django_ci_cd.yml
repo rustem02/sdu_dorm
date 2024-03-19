@@ -45,12 +45,9 @@ jobs:
     - name: Install Heroku CLI
       run: |
         curl https://cli-assets.heroku.com/install.sh | sh
-    - name: Heroku login
-      run: heroku login -i
-      env:
-        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
     - name: Heroku deploy
       run: |
         git push heroku main
       env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         HEROKU_APP_NAME: sdudorm
