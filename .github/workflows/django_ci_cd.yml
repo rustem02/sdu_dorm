@@ -54,5 +54,5 @@ jobs:
       run: |
         git push heroku main
       env:
-        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        HEROKU_API_KEY: ${{secrets.HEROKU_API_KEY}}
         HEROKU_APP_NAME: sdudorm
