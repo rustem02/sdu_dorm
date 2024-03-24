@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script type="text/javascript">
+    var socket = new WebSocket('ws://127.0.0.1:8000/ws/available-seats/');
+    socket.onmessage = function(event) {
+        console.log(event.data);
+    };
+    socket.onopen = function(event) {
+        console.log("Соединение установлено.");
+    };
+    socket.onerror = function(event) {
+        console.error("Ошибка WebSocket:", event);
+    };
+</script>
+</body>
+</html>

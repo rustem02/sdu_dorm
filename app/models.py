@@ -77,6 +77,8 @@ class SubmissionDocuments(models.Model):
     photo_3x4 = models.FileField(upload_to='documents/photo_3x4/', null=True, blank=True)
     form_075 = models.FileField(upload_to='documents/form_075/', null=True, blank=True)
     identity_card_copy = models.FileField(upload_to='documents/identity_card/', null=True, blank=True)
+    is_verified = models.BooleanField(default=False, verbose_name='Verified Status')
+    admin_comments = models.TextField(blank=True, null=True, verbose_name='Admin Comments')
 
 
     def __str__(self):
@@ -127,16 +129,20 @@ class Booking(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='bookings')
     seat = models.ForeignKey(Seat, on_delete=models.CASCADE, related_name='bookings')
 
-    start_date = models.DateField()
-    end_date = models.DateField()
+    SEMESTER_CHOICES = (
+        (1, "1 semester"),
+        (2, "2 semesters"),
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
                                       # default=timezone.now
                                       )
     is_active = models.BooleanField(default=True)
+    semester_duration = models.IntegerField(choices=SEMESTER_CHOICES, default=1, verbose_name='Duration in Semesters')
+
 
     def __str__(self):
-        return f'Booking by {self.user.email} from {self.start_date} to {self.end_date}'
+        return f'Booking by {self.user.email} for {self.semester_duration} semester(s)'
 
     # def release_seats(self):
     #     for booking in Booking.objects.filter(end_date__lt=timezone.now(), is_active=True):
