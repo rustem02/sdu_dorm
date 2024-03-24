@@ -3,6 +3,7 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from .models import *
+from django.db import transaction
 
 User = get_user_model()
 
@@ -72,7 +73,7 @@ class BookingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Booking
-        fields = ['user', 'room', 'seat', 'start_date', 'end_date']
+        fields = ['user', 'room', 'seat', 'semester_duration']
         read_only_fields = ('user',)
 
     def validate(self, data):
@@ -86,27 +87,37 @@ class BookingSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("The seat does not belong to the selected room.")
         if seat.is_reserved:
             raise serializers.ValidationError("This seat is already reserved.")
-        if data['seat'].is_reserved:
-            raise serializers.ValidationError("This seat is already reserved.")
+        # if data['seat'].is_reserved:
+        #     raise serializers.ValidationError("This seat is already reserved.")
         if Booking.objects.filter(user=user, is_active=True).exists():
             raise serializers.ValidationError("You have already booked a seat.")
+        if not user.submission_documents.is_verified:
+            raise serializers.ValidationError("Your documents have not been verified yet.")
         # return data
         return data
 
     def create(self, validated_data):
-        # Устанавливаем место как зарезервированное
-        seat = validated_data['seat']
-        seat.is_reserved = True
-        seat.save()
+        with transaction.atomic():
+            # Remove the 'user' key from validated_data if it exists to avoid conflicts
+            validated_data.pop('user', None)
 
-        # Проверка документов пользователя
-        user = self.context['request'].user
-        if not user.is_doc_submitted:
-            raise serializers.ValidationError("You need to submit documents before making a booking.")
-        if not user.submission_documents.is_verified:
-            raise serializers.ValidationError("Your documents have not been verified yet.")
+            # Explicitly set the user to the request user from the context
+            user = self.context['request'].user
 
-        booking = Booking.objects.create(**validated_data, user=user)
+            # Set the seat as reserved
+            seat = validated_data['seat']
+            if not seat.is_reserved:
+                seat.is_reserved = True
+                seat.save()
+            else:
+                raise serializers.ValidationError({"seat": "This seat is already reserved."})
+
+            # Check documents and create the booking
+            if not user.is_doc_submitted or not user.submission_documents.is_verified:
+                raise serializers.ValidationError("Your documents are not verified or submitted.")
+
+            booking = Booking.objects.create(**validated_data, user=user)
+
         return booking
 
 

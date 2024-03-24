@@ -129,7 +129,7 @@ class BookingCreateAPIView(generics.CreateAPIView):
         # Проверяем, подтверждены ли документы пользователя
         if not user.submission_documents.is_verified:
             raise Response({"error": "Your documents have not been verified yet."}, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save(user=self.request.user)
+        serializer.save()
 
 
 class BookingListView(ListAPIView):

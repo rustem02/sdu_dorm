@@ -129,16 +129,20 @@ class Booking(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='bookings')
     seat = models.ForeignKey(Seat, on_delete=models.CASCADE, related_name='bookings')
 
-    start_date = models.DateField()
-    end_date = models.DateField()
+    SEMESTER_CHOICES = (
+        (1, "1 semester"),
+        (2, "2 semesters"),
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
                                       # default=timezone.now
                                       )
     is_active = models.BooleanField(default=True)
+    semester_duration = models.IntegerField(choices=SEMESTER_CHOICES, default=1, verbose_name='Duration in Semesters')
+
 
     def __str__(self):
-        return f'Booking by {self.user.email} from {self.start_date} to {self.end_date}'
+        return f'Booking by {self.user.email} for {self.semester_duration} semester(s)'
 
     # def release_seats(self):
     #     for booking in Booking.objects.filter(end_date__lt=timezone.now(), is_active=True):
