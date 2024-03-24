@@ -23,7 +23,8 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import ListAPIView
 from rest_framework.generics import RetrieveAPIView
 from django.shortcuts import get_object_or_404
-
+from rest_framework_simplejwt.tokens import RefreshToken
+from urllib.parse import unquote
 
 class RegisterAPIView(APIView):
     permission_classes = [AllowAny]
@@ -35,6 +36,18 @@ class RegisterAPIView(APIView):
             return Response({"detail": "User registered successfully. Please check your email to verify."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# class LoginAPIView(APIView):
+#     permission_classes = (AllowAny,)
+#
+#     def post(self, request, *args, **kwargs):
+#         serializer = LoginSerializer(data=request.data)
+#         if serializer.is_valid():
+#             user = serializer.validated_data
+#             token, created = Token.objects.get_or_create(user=user)
+#             return Response({"token": token.key}, status=status.HTTP_200_OK)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class LoginAPIView(APIView):
     permission_classes = (AllowAny,)
 
@@ -42,8 +55,11 @@ class LoginAPIView(APIView):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key}, status=status.HTTP_200_OK)
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -95,7 +111,12 @@ def verify_email(request, verification_code):
         return HttpResponse('Invalid verification code', status=400)
 
 
-
+class IsOwnerOrAdmin(BasePermission):
+    """
+    Разрешение, которое позволяет доступ только владельцу ресурса или администратору.
+    """
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj.user or request.user.is_staff
 
 
 class BookingCreateAPIView(generics.CreateAPIView):
@@ -104,8 +125,10 @@ class BookingCreateAPIView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-
-        # serializer.save(user=self.request.user)
+        user = self.request.user
+        # Проверяем, подтверждены ли документы пользователя
+        if not user.submission_documents.is_verified:
+            raise Response({"error": "Your documents have not been verified yet."}, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
 
 
@@ -168,11 +191,15 @@ class UserListView(ListAPIView):
 
 
 class UserDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
 
-    def get(self, request, user_id):
-        user = User.objects.get(id=user_id)
-        serializer = UserDetailsSerializer(user)
+    def get(self, request):
+        email = request.query_params.get('email')
+        if not email:
+            return Response({"error": "Email parameter is required."}, status=400)
+
+        user = get_object_or_404(User, email=email)
+        serializer = UserDetailsSerializer(user, context={'request': request})
         return Response(serializer.data)
 
 
@@ -189,12 +216,7 @@ class SubmissionDocumentsListView(ListAPIView):
         return SubmissionDocuments.objects.filter(user=user)
 
 
-class IsOwnerOrAdmin(BasePermission):
-    """
-    Разрешение, которое позволяет доступ только владельцу ресурса или администратору.
-    """
-    def has_object_permission(self, request, view, obj):
-        return request.user == obj.user or request.user.is_staff
+
 
 class UserDocumentsByIDView(RetrieveAPIView):
     queryset = SubmissionDocuments.objects.all()
@@ -211,6 +233,15 @@ class UserDocumentsByIDView(RetrieveAPIView):
         return document
 
 
+
+class DocumentVerificationView(generics.UpdateAPIView):
+    queryset = SubmissionDocuments.objects.all()
+    serializer_class = DocumentVerificationSerializer
+    permission_classes = [IsOwnerOrAdmin]  # Позволяет доступ только администраторам
+
+    def get_object(self):
+        # Вы можете использовать 'pk' из URL для получения конкретного экземпляра SubmissionDocuments
+        return get_object_or_404(SubmissionDocuments, pk=self.kwargs['pk'])
 
 class SubmissionDocumentsView(APIView):
     permission_classes = [permissions.IsAuthenticated]

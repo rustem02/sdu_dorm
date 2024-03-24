@@ -6,7 +6,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 
-
+# надо доработать
 schema_view = get_schema_view(
     openapi.Info(
         title="Your API",
@@ -32,6 +32,7 @@ urlpatterns = [
     path('documents/get/', SubmissionDocumentsListView.as_view(), name='documents-list'),
     # Нужны права администратора
     path('user-documents/<int:pk>/', UserDocumentsByIDView.as_view(), name='user-documents-by-id'),
+    path('api/documents/verify/<int:pk>/', DocumentVerificationView.as_view(), name='document-verification'),
 
 
     # Booking
@@ -44,7 +45,8 @@ urlpatterns = [
 
 
     path('api/users/', UserListView.as_view(), name='user-list'),
-    path('user-details/<int:user_id>/', UserDetailView.as_view(), name='user-details'),
+    # по эмайлу пользователя
+    path('user-details/', UserDetailView.as_view(), name='user-details'),
 
     # path('api/rooms/', views.RoomListView.as_view(), name='room-list'),
     #

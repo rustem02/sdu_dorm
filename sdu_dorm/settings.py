@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    # 'channels',
+    # 'daphne',
     'django.contrib.staticfiles',
     'app',
     'rest_framework.authtoken',
@@ -72,6 +74,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'sdu_dorm.wsgi.application'
+# ASGI_APPLICATION = 'sdu_dorm.asgi.application'
+#
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             "hosts": [('127.0.0.1', 6379)],  # Укажите конфигурацию вашего Redis сервера
+#         },
+#     },
+# }
 
 MEDIA_URL = '/media/'
 
@@ -88,8 +100,11 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
+    # 'DEFAULT_AUTHENTICATION_CLASSES': [
+    #     'rest_framework.authentication.TokenAuthentication',
+    # ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -103,6 +118,12 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = 'sdudorm68@gmail.com'
 EMAIL_HOST_PASSWORD = 'iunttsknjptgrsiq'
 
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+}
 
 
 # Password validation
@@ -137,7 +158,7 @@ USE_TZ = True
 
 
 # settings.py
-STATIC_ROOT = os.path.join(BASE_DIR, 'media')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
