@@ -48,6 +48,10 @@ urlpatterns = [
     # по эмайлу пользователя
     path('user-details/', UserDetailView.as_view(), name='user-details'),
 
+    # news
+    path('news/', NewsListCreateView.as_view(), name='news-list-create'),
+    path('news/<int:pk>/', NewsUpdateView.as_view(), name='news-update'),
+
     # path('api/rooms/', views.RoomListView.as_view(), name='room-list'),
     #
     # path('api/rooms/<int:block_id>/<int:room_id>/<int:seat_id>/', views.RoomDetailView.as_view(), name='room-detail'),

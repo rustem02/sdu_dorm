@@ -265,3 +265,34 @@ class SubmissionDocumentsView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class IsAdminUserOrReadOnly(permissions.BasePermission):
+    """
+    Object-level permission to only allow admins to edit it.
+    Assumes the model instance has an `is_staff` attribute.
+    """
+
+    def has_permission(self, request, view):
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        # Write permissions are only allowed to staff users.
+        return request.user and request.user.is_staff
+
+class NewsListCreateView(generics.ListCreateAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [IsAdminUserOrReadOnly, permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        # Automatically set the author to the current user
+        serializer.save(author=self.request.user)
+
+class NewsUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [permissions.IsAdminUser, permissions.IsAuthenticated]  # Only allow access to admin users
+
+    def perform_update(self, serializer):
+        serializer.save()  # Additional actions can be performed here
