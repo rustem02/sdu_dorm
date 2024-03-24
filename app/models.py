@@ -77,6 +77,8 @@ class SubmissionDocuments(models.Model):
     photo_3x4 = models.FileField(upload_to='documents/photo_3x4/', null=True, blank=True)
     form_075 = models.FileField(upload_to='documents/form_075/', null=True, blank=True)
     identity_card_copy = models.FileField(upload_to='documents/identity_card/', null=True, blank=True)
+    is_verified = models.BooleanField(default=False, verbose_name='Verified Status')
+    admin_comments = models.TextField(blank=True, null=True, verbose_name='Admin Comments')
 
 
     def __str__(self):

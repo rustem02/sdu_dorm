@@ -81,10 +81,16 @@ class BookingSerializer(serializers.ModelSerializer):
         """
         room = data.get('room')
         seat = data.get('seat')
+        user = self.context['request'].user
         if seat.room != room:
             raise serializers.ValidationError("The seat does not belong to the selected room.")
         if seat.is_reserved:
             raise serializers.ValidationError("This seat is already reserved.")
+        if data['seat'].is_reserved:
+            raise serializers.ValidationError("This seat is already reserved.")
+        if Booking.objects.filter(user=user, is_active=True).exists():
+            raise serializers.ValidationError("You have already booked a seat.")
+        # return data
         return data
 
     def create(self, validated_data):
@@ -97,6 +103,8 @@ class BookingSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if not user.is_doc_submitted:
             raise serializers.ValidationError("You need to submit documents before making a booking.")
+        if not user.submission_documents.is_verified:
+            raise serializers.ValidationError("Your documents have not been verified yet.")
 
         booking = Booking.objects.create(**validated_data, user=user)
         return booking
@@ -119,7 +127,7 @@ class GetSubmissionDocumentSerializer(serializers.ModelSerializer):
 class GetUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        fields = ['email', 'first_name', 'last_name', 'birth_date', 'id_number', 'faculty', 'specialty', 'gender', 'submission_documents', 'bookings', 'is_dorm', 'is_doc_submitted']
 
 
 class UserDetailsSerializer(serializers.ModelSerializer):
@@ -128,21 +136,33 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'birth_date', 'id_number', 'faculty', 'specialty', 'gender', 'submission_documents', 'bookings']
+        fields = ['email', 'first_name', 'last_name', 'birth_date', 'id_number', 'faculty', 'specialty', 'gender', 'submission_documents', 'bookings', 'is_dorm', 'is_doc_submitted']
 
     def get_submission_documents(self, obj):
-        try:
-            documents = SubmissionDocuments.objects.get(user=obj)
-            return SubmissionDocumentsSerializer(documents).data
-        except SubmissionDocuments.DoesNotExist:
-            return "No documents submitted."
+        # Получаем пользователя, который делает запрос
+        request_user = self.context['request'].user
+        # Проверяем, является ли пользователь администратором
+        if request_user.is_staff:
+            try:
+                documents = SubmissionDocuments.objects.get(user=obj)
+                return SubmissionDocumentsSerializer(documents).data
+            except SubmissionDocuments.DoesNotExist:
+                return "No documents submitted."
+        else:
+            # Ограничиваем доступ, если пользователь не является администратором
+            return "Access restricted."
 
     def get_bookings(self, obj):
-        bookings = Booking.objects.filter(user=obj)
-        if bookings.exists():
-            return BookingSerializer(bookings, many=True).data
+        request_user = self.context['request'].user
+        # Аналогичная проверка для бронирований
+        if request_user.is_staff:
+            bookings = Booking.objects.filter(user=obj)
+            if bookings.exists():
+                return BookingSerializer(bookings, many=True).data
+            else:
+                return "No bookings made."
         else:
-            return "No bookings made."
+            return "Access restricted."
 
 
 
@@ -168,3 +188,9 @@ class SubmissionDocumentsSerializer(serializers.ModelSerializer):
             user.save()
 
         return instance
+
+
+class DocumentVerificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubmissionDocuments
+        fields = ['is_verified', 'admin_comments']
