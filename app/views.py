@@ -212,6 +212,16 @@ class UserDetailView(APIView):
         return Response(serializer.data)
 
 
+class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = self.request.user
+
+        serializer = UserProfileSerializer(user, context={'request': request})
+        return Response(serializer.data)
+
+
 
 class SubmissionDocumentsListView(ListAPIView):
     serializer_class = GetSubmissionDocumentSerializer
