@@ -29,7 +29,7 @@ from urllib.parse import unquote
 class HomePage(ListAPIView):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
 
