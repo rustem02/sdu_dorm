@@ -21,6 +21,8 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    # Home
+    path('', home, name='home'),
     # Auth
     path('api/register/', RegisterAPIView.as_view(), name='register'),
     path('api/login/', LoginAPIView.as_view(), name='api_login'),
@@ -47,6 +49,10 @@ urlpatterns = [
     path('api/users/', UserListView.as_view(), name='user-list'),
     # по эмайлу пользователя
     path('user-details/', UserDetailView.as_view(), name='user-details'),
+
+    # news
+    path('news/', NewsListCreateView.as_view(), name='news-list-create'),
+    path('news/<int:pk>/', NewsUpdateView.as_view(), name='news-update'),
 
     # path('api/rooms/', views.RoomListView.as_view(), name='room-list'),
     #

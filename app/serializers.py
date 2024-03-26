@@ -205,3 +205,14 @@ class DocumentVerificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionDocuments
         fields = ['is_verified', 'admin_comments']
+
+
+# Новости
+
+class NewsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = News
+        fields = ['id', 'title', 'content', 'file', 'datePublished', 'author']
+        read_only_fields = ('author', 'datePublished')  # Author will be set in the view, and datePublished is auto-set
+
+
