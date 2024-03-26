@@ -26,6 +26,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 from urllib.parse import unquote
 
+def home (request):
+    return render(request, 'app/home.html')
+
 class RegisterAPIView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):

@@ -21,6 +21,8 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    # Home
+    path('', home, name='home'),
     # Auth
     path('api/register/', RegisterAPIView.as_view(), name='register'),
     path('api/login/', LoginAPIView.as_view(), name='api_login'),
