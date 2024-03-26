@@ -176,6 +176,36 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             return "Access restricted."
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    submission_documents = serializers.SerializerMethodField()
+    bookings = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'last_name', 'birth_date', 'id_number', 'faculty', 'specialty', 'gender', 'submission_documents', 'bookings', 'is_dorm', 'is_doc_submitted']
+
+    def get_submission_documents(self, obj):
+        # Получаем пользователя, который делает запрос
+        request_user = self.context['request'].user
+        # Проверяем, является ли пользователь администратором
+
+        try:
+            documents = SubmissionDocuments.objects.get(user=obj)
+            return SubmissionDocumentsSerializer(documents).data
+        except SubmissionDocuments.DoesNotExist:
+            return "No documents submitted."
+
+
+    def get_bookings(self, obj):
+        request_user = self.context['request'].user
+        # Аналогичная проверка для бронирований
+
+        bookings = Booking.objects.filter(user=obj)
+        if bookings.exists():
+            return BookingSerializer(bookings, many=True).data
+        else:
+            return "No bookings made."
+
 
 
 class SubmissionDocumentsSerializer(serializers.ModelSerializer):
