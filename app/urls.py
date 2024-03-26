@@ -30,10 +30,10 @@ urlpatterns = [
     path('verify-email/<uuid:verification_code>/', verify_email, name='verify_email'),
 
     # Submission documents
-    path('documents/upload/', SubmissionDocumentsView.as_view(), name='documents-upload'),
-    path('documents/get/', SubmissionDocumentsListView.as_view(), name='documents-list'),
+    path('api/documents/upload/', SubmissionDocumentsView.as_view(), name='documents-upload'),
+    path('api/documents/get/', SubmissionDocumentsListView.as_view(), name='documents-list'),
     # Нужны права администратора
-    path('user-documents/<int:pk>/', UserDocumentsByIDView.as_view(), name='user-documents-by-id'),
+    path('api/user-documents/<int:pk>/', UserDocumentsByIDView.as_view(), name='user-documents-by-id'),
     path('api/documents/verify/<int:pk>/', DocumentVerificationView.as_view(), name='document-verification'),
 
 
@@ -48,11 +48,14 @@ urlpatterns = [
 
     path('api/users/', UserListView.as_view(), name='user-list'),
     # по эмайлу пользователя
-    path('user-details/', UserDetailView.as_view(), name='user-details'),
+    path('api/user-details/', UserDetailView.as_view(), name='user-details'),
 
     # news
     path('news/', NewsListCreateView.as_view(), name='news-list-create'),
     path('news/<int:pk>/', NewsUpdateView.as_view(), name='news-update'),
+
+    # Profile
+    path('api/profile/', ProfileView.as_view(), name='user-profile'),
 
     # path('api/rooms/', views.RoomListView.as_view(), name='room-list'),
     #
