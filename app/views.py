@@ -26,8 +26,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 from urllib.parse import unquote
 
-def home (request):
-    return render(request, 'app/home.html')
+class HomePage(ListAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+
+        return News.objects.all()
 
 class RegisterAPIView(APIView):
     permission_classes = [AllowAny]
