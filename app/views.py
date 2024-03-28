@@ -157,18 +157,18 @@ class BookingListView(ListAPIView):
 class CancelBookingView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, booking_id):
-        booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+    def post(self, request):
+        # Находим активное бронирование для пользователя
+        booking = Booking.objects.filter(user=request.user, is_active=True).first()
 
-        # Проверяем, активно ли бронирование
-        if not booking.is_active:
-            return Response({"error": "This booking is already cancelled."}, status=status.HTTP_400_BAD_REQUEST)
+        if not booking:
+            return Response({"error": "No active booking found to cancel."}, status=status.HTTP_404_NOT_FOUND)
 
         # Отменяем бронирование
         booking.is_active = False
         booking.save()
 
-        # Делаем место снова доступным, если необходимо
+        # Делаем место снова доступным
         seat = booking.seat
         seat.is_reserved = False
         seat.save()
@@ -181,12 +181,41 @@ class AvailableSeatsListView(ListAPIView):
     serializer_class = SeatSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        """
-        Возвращает список свободных мест.
-        """
-        return Seat.objects.filter(is_reserved=False)
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        # Добавляем проверки состояния документов пользователя
+        if not user.is_doc_submitted:
+            return Response({"error": "You need to submit your documents before making a booking."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
+        if not user.submission_documents.is_verified:
+            return Response({"error": "Your documents have not been verified yet."}, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = Seat.objects.filter(is_reserved=False)
+        serializer = SeatSerializer(queryset, many=True, context={'request': request})
+        # Фильтруем None значения из ответа
+        filtered_data = [seat for seat in serializer.data if seat is not None]
+        return Response(filtered_data)
+
+
+
+class AvailableSeatsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        # Добавляем проверки состояния документов пользователя
+        if not user.is_doc_submitted:
+            return Response({"error": "You need to submit your documents before making a booking."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.submission_documents.is_verified:
+            return Response({"error": "Your documents have not been verified yet."}, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = Seat.objects.all()
+        serializer = SeatSerializer(queryset, many=True, context={'request': request})
+        # Фильтруем None значения из ответа
+        filtered_data = [seat for seat in serializer.data if seat is not None]
+        return Response(filtered_data)
 
 class UserListView(ListAPIView):
     serializer_class = GetUserSerializer
