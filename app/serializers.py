@@ -43,91 +43,155 @@ class LoginSerializer(serializers.Serializer):
         return user
 
 
-# Надо доделать!
+
+
 # class BookingSerializer(serializers.ModelSerializer):
+#     room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all())
+#     seat = serializers.PrimaryKeyRelatedField(queryset=Seat.objects.all())
+#
 #     class Meta:
 #         model = Booking
-#         fields = ['user', 'room', 'start_date', 'end_date', 'created_at']
-#         read_only_fields = ('user', 'created_at')  # Защищаем некоторые поля от изменений
-#
-#     def create(self, validated_data):
-#         # Добавляем пользователя из контекста запроса
-#         validated_data['user'] = self.context['request'].user
-#         docs = self.context['request'].user.is_doc_submitted
-#         if docs == True:
-#             return super().create(validated_data)
-#         else:
-#             raise serializers.ValidationError("You need to submit documents")
+#         fields = ['user', 'room', 'seat', 'semester_duration']
+#         read_only_fields = ('user',)
 #
 #     def validate(self, data):
 #         """
-#         Валидация дат: начальная дата не может быть позже конечной.
+#         Проверяем, что место принадлежит выбранной комнате.
 #         """
-#         if data['start_date'] > data['end_date']:
-#             raise serializers.ValidationError("End date must occur after start date")
+#         room = data.get('room')
+#         seat = data.get('seat')
+#         user = self.context['request'].user
+#         if seat.room != room:
+#             raise serializers.ValidationError("The seat does not belong to the selected room.")
+#         if seat.is_reserved:
+#             raise serializers.ValidationError("This seat is already reserved.")
+#         # if data['seat'].is_reserved:
+#         #     raise serializers.ValidationError("This seat is already reserved.")
+#         if Booking.objects.filter(user=user, is_active=True).exists():
+#             raise serializers.ValidationError("You have already booked a seat.")
+#         if not user.submission_documents.is_verified:
+#             raise serializers.ValidationError("Your documents have not been verified yet.")
+#         # return data
 #         return data
+#
+#     def create(self, validated_data):
+#         with transaction.atomic():
+#             # Remove the 'user' key from validated_data if it exists to avoid conflicts
+#             validated_data.pop('user', None)
+#
+#             # Explicitly set the user to the request user from the context
+#             user = self.context['request'].user
+#
+#             # Set the seat as reserved
+#             seat = validated_data['seat']
+#             if not seat.is_reserved:
+#                 seat.is_reserved = True
+#                 seat.save()
+#             else:
+#                 raise serializers.ValidationError({"seat": "This seat is already reserved."})
+#
+#             # Check documents and create the booking
+#             if not user.is_doc_submitted or not user.submission_documents.is_verified:
+#                 raise serializers.ValidationError("Your documents are not verified or submitted.")
+#
+#             booking = Booking.objects.create(**validated_data, user=user)
+#
+#         return booking
+
 
 class BookingSerializer(serializers.ModelSerializer):
-    room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all())
-    seat = serializers.PrimaryKeyRelatedField(queryset=Seat.objects.all())
+    block = serializers.CharField(write_only=True)
+    room_number = serializers.CharField(write_only=True)
+    seat_number = serializers.IntegerField(write_only=True)
+    semester_duration = serializers.IntegerField()
 
     class Meta:
         model = Booking
-        fields = ['user', 'room', 'seat', 'semester_duration']
+        fields = ['user', 'block', 'room_number', 'seat_number', 'semester_duration']
         read_only_fields = ('user',)
 
     def validate(self, data):
-        """
-        Проверяем, что место принадлежит выбранной комнате.
-        """
-        room = data.get('room')
-        seat = data.get('seat')
         user = self.context['request'].user
-        if seat.room != room:
-            raise serializers.ValidationError("The seat does not belong to the selected room.")
-        if seat.is_reserved:
-            raise serializers.ValidationError("This seat is already reserved.")
-        # if data['seat'].is_reserved:
-        #     raise serializers.ValidationError("This seat is already reserved.")
-        if Booking.objects.filter(user=user, is_active=True).exists():
-            raise serializers.ValidationError("You have already booked a seat.")
+
+        # Дополнительные проверки
+        if not user.is_doc_submitted:
+            raise serializers.ValidationError("You need to submit your documents before making a booking.")
+
         if not user.submission_documents.is_verified:
             raise serializers.ValidationError("Your documents have not been verified yet.")
-        # return data
+
+        block = data.get('block')
+        room_number = data.get('room_number')
+        seat_number = data.get('seat_number')
+
+        if Booking.objects.filter(user=user, is_active=True).exists():
+            raise serializers.ValidationError(
+                "You already have an active booking. Please cancel it before making a new one.")
+
+        room = Room.objects.filter(block=block, room_number=room_number).first()
+        if not room:
+            raise serializers.ValidationError("Room not found.")
+
+        seat = Seat.objects.filter(room=room, seat_number=seat_number).first()
+        if not seat:
+            raise serializers.ValidationError("Seat not found in the specified room.")
+
+        if seat.is_reserved:
+            raise serializers.ValidationError("This seat is already reserved.")
+
+        data['room'] = room
+        data['seat'] = seat
         return data
 
     def create(self, validated_data):
-        with transaction.atomic():
-            # Remove the 'user' key from validated_data if it exists to avoid conflicts
-            validated_data.pop('user', None)
+        validated_data.pop('block', None)
+        validated_data.pop('room_number', None)
+        validated_data.pop('seat_number', None)
 
-            # Explicitly set the user to the request user from the context
-            user = self.context['request'].user
+        user = self.context['request'].user
 
-            # Set the seat as reserved
-            seat = validated_data['seat']
-            if not seat.is_reserved:
-                seat.is_reserved = True
-                seat.save()
-            else:
-                raise serializers.ValidationError({"seat": "This seat is already reserved."})
+        seat = validated_data['seat']
+        seat.is_reserved = True
+        seat.save()
 
-            # Check documents and create the booking
-            if not user.is_doc_submitted or not user.submission_documents.is_verified:
-                raise serializers.ValidationError("Your documents are not verified or submitted.")
-
-            booking = Booking.objects.create(**validated_data, user=user)
-
+        booking = Booking.objects.create(**validated_data, user=user)
         return booking
 
 
+# class SeatSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Seat
+#         fields = '__all__'
 
 class SeatSerializer(serializers.ModelSerializer):
+    room_number = serializers.SerializerMethodField()
+    block = serializers.SerializerMethodField()
+    reserved_by = serializers.SerializerMethodField()
+
     class Meta:
         model = Seat
-        fields = '__all__'
+        fields = ['id', 'seat_number', 'block', 'room_number', 'is_reserved', 'reserved_by']
 
+    def get_room_number(self, obj):
+        return obj.room.room_number
 
+    def get_block(self, obj):
+        return obj.room.block
+
+    def get_reserved_by(self, obj):
+        if obj.is_reserved:
+            booking = obj.bookings.filter(is_active=True).first()  # Предполагаем, что активное бронирование может быть только одно
+            if booking:
+                return booking.user.email  # Или любая другая информация о пользователе, которая вам нужна
+        return None
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        user = self.context['request'].user
+        if (user.gender == 'Male' and instance.room.block not in ['C', 'D']) or \
+           (user.gender == 'Female' and instance.room.block not in ['A', 'B']):
+            return None  # Вместо пустого объекта лучше возвращать None для фильтрации во view
+        return representation
 
 class GetSubmissionDocumentSerializer(serializers.ModelSerializer):
     class Meta:
