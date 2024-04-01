@@ -1,17 +1,26 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>WebSocket Test</title>
+</head>
 <body>
-<script type="text/javascript">
-    var socket = new WebSocket('ws://127.0.0.1:8000/ws/available-seats/');
-    socket.onmessage = function(event) {
-        console.log(event.data);
-    };
-    socket.onopen = function(event) {
-        console.log("Соединение установлено.");
-    };
-    socket.onerror = function(event) {
-        console.error("Ошибка WebSocket:", event);
-    };
-</script>
+    <h2>Уведомления:</h2>
+    <ul id="notifications"></ul>
+
+    <script type="text/javascript">
+        var socket = new WebSocket('wss://127.0.0.1:8000/ws/notifications/');
+var userToken = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEyMDU4OTkzLCJpYXQiOjE3MTE5NzI1OTMsImp0aSI6IjlhYTZhN2E3ZDQzNDQ2MzI4ZTU5M2UxOTJjZTc5ODg4IiwidXNlcl9pZCI6M30.UkA1gIPPqIFsgLr7MDxz4ymlkWM-w2kWMK_QU64rAUQ'
+socket.onopen = function(event) {
+    console.log("Соединение установлено.");
+    // Отправляем токен серверу для аутентификации пользователя
+    socket.send(JSON.stringify({ token: userToken }));
+};
+socket.onclose = function(event) {
+    console.log("Соединение не установлено.");
+    // Отправляем токен серверу для аутентификации пользователя
+    socket.send(JSON.stringify({ token: userToken }));
+};
+
+    </script>
 </body>
 </html>

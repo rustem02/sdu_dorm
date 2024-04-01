@@ -26,6 +26,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 from urllib.parse import unquote
 
+from reportlab.pdfgen import canvas
+from io import BytesIO
+
 class HomePage(ListAPIView):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
@@ -344,3 +347,112 @@ class NewsUpdateView(generics.RetrieveUpdateAPIView):
 
     def perform_update(self, serializer):
         serializer.save()  # Additional actions can be performed here
+
+
+
+class PaymentAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, *args, **kwargs):
+        serializer = PaymentSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentSuccessAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        # Ваша логика обработки успешной оплаты
+        return JsonResponse({"status": "success", "message": "Payment was successful"})
+
+class PaymentFailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        # Ваша логика обработки неудачной оплаты
+        return JsonResponse({"status": "fail", "message": "Payment failed"})
+
+class PaymentReceiptAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        # Получение данных о последней успешной оплате пользователя
+        user = request.user
+        payment = DefaultPayment.objects.filter(user=user).last()
+
+        if payment:
+            receipt = {
+                "amount": payment.amount,
+                "date": payment.created_at,
+                "booking_id": payment.booking.id,
+                "status": "Paid"
+            }
+            return JsonResponse({"receipt": receipt})
+        else:
+            return JsonResponse({"status": "error", "message": "No payment records found"}, status=404)
+
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from django.http import HttpResponse
+from .models import DefaultPayment
+
+class DownloadReceiptAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        payment = DefaultPayment.objects.filter(user=user).last()
+
+        if payment:
+            # Подготовка HTTP-ответа с типом содержимого PDF
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="receipt_{payment.id}.pdf"'
+
+            buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            story = []
+            styles = getSampleStyleSheet()
+
+            # Заголовок чека
+            story.append(Paragraph('Payment receipt', styles['Title']))
+
+            # Добавляем небольшой отступ после заголовка
+            story.append(Spacer(1, 12))
+
+            # Информация о платеже в виде таблицы
+            data = [
+                ['Name Surname', f'{user.first_name} {user.last_name}'],
+                ['Email', user.email],
+                ['Payment amount', f'${payment.amount}'],
+                ['Date of payment', payment.created_at.strftime('%Y-%m-%d %H:%M:%S')],
+                ['Booking ID', f'{payment.booking.id if payment.booking else "N/A"}']
+            ]
+
+            table = Table(data, colWidths=[200, 300])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            story.append(table)
+
+            # Сохранение PDF
+            doc.build(story)
+
+            pdf = buffer.getvalue()
+            buffer.close()
+            response.write(pdf)
+            return response
+        else:
+            return HttpResponse("Нет записей об оплате", status=404)
+
+
