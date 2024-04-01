@@ -10,3 +10,12 @@
 # application = ProtocolTypeRouter({
 #     'websocket': URLRouter(websocket_urlpatterns),
 # })
+
+
+
+# from django.urls import path
+# from app.consumers import NotificationConsumer
+#
+# websocket_urlpatterns = [
+#     path('ws/notifications/', NotificationConsumer.as_asgi()),
+# ]
