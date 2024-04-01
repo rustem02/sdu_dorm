@@ -182,6 +182,20 @@ class Transaction(models.Model):
     def __str__(self):
         return f'Payment for Booking ID {self.booking.id} by {self.user.email}'
 
+
+class DefaultPayment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='defaultpayment')
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='defaultpayment', null=True, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        # default=timezone.now
+    )
+    status = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f'Payment for Booking ID {self.booking.id} by {self.user.email}'
+
 class News(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()

@@ -4,6 +4,8 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from .models import *
 from django.db import transaction
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 User = get_user_model()
 
@@ -231,7 +233,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         request_user = self.context['request'].user
         # Аналогичная проверка для бронирований
         if request_user.is_staff:
-            bookings = Booking.objects.filter(user=obj)
+            bookings = Booking.objects.filter(user=obj, is_active=True)
             if bookings.exists():
                 return BookingSerializer(bookings, many=True).data
             else:
@@ -294,11 +296,41 @@ class SubmissionDocumentsSerializer(serializers.ModelSerializer):
 
         return instance
 
+#
+# class DocumentVerificationSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = SubmissionDocuments
+#         fields = ['is_verified', 'admin_comments']
+
+channel_layer = get_channel_layer()
+def send_notification(user_id, message):
+    group_name = f'notifications_{user_id}'
+    async_to_sync(channel_layer.group_send)(
+        group_name,
+        {
+            'type': 'notification_message',
+            'message': message
+        }
+    )
+
 
 class DocumentVerificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionDocuments
         fields = ['is_verified', 'admin_comments']
+
+    def update(self, instance, validated_data):
+        # Обновляем экземпляр SubmissionDocuments с новыми данными
+        instance.is_verified = validated_data.get('is_verified', instance.is_verified)
+        instance.admin_comments = validated_data.get('admin_comments', instance.admin_comments)
+        instance.save()
+
+        # Отправляем уведомление пользователю, если документы были проверены
+        if instance.is_verified:
+            message = "Ваши документы были успешно проверены. Теперь вы можете приступать к бронированию."
+            send_notification(instance.user.id, message)
+
+        return instance
 
 
 # Новости
@@ -310,3 +342,29 @@ class NewsSerializer(serializers.ModelSerializer):
         read_only_fields = ('author', 'datePublished')  # Author will be set in the view, and datePublished is auto-set
 
 
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DefaultPayment
+        fields = ['amount', 'booking']
+
+    def create(self, validated_data):
+        user = self.context['request'].user  # Получаем пользователя из контекста запроса
+        validated_data['user'] = user  # Добавляем пользователя в данные для создания объекта
+        payment = DefaultPayment.objects.create(**validated_data)
+
+        user.is_dorm = True
+        user.save()
+        return payment
+
+    def validate_booking(self, value):
+        """
+        Добавьте кастомную валидацию для проверки, принадлежит ли бронирование пользователю
+        и не оплачено ли оно уже.
+        """
+        user = self.context['request'].user
+        if value.user != user:
+            raise serializers.ValidationError("This booking does not belong to the current user.")
+        if user.is_dorm:  # Предполагается наличие поля is_paid в модели Booking
+            raise serializers.ValidationError("This booking has already been paid for.")
+        return value
