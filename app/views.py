@@ -60,6 +60,20 @@ class RegisterAPIView(APIView):
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# class LoginAPIView(APIView):
+#     permission_classes = (AllowAny,)
+#
+#     def post(self, request, *args, **kwargs):
+#         serializer = LoginSerializer(data=request.data)
+#         if serializer.is_valid():
+#             user = serializer.validated_data
+#             refresh = RefreshToken.for_user(user)
+#             return Response({
+#                 'refresh': str(refresh),
+#                 'access': str(refresh.access_token),
+#             }, status=status.HTTP_200_OK)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class LoginAPIView(APIView):
     permission_classes = (AllowAny,)
 
@@ -68,9 +82,26 @@ class LoginAPIView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data
             refresh = RefreshToken.for_user(user)
+
+            user_data = {
+                'id': user.id,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'id_number': user.id_number,
+                'birth_date': user.birth_date.strftime('%Y-%m-%d') if user.birth_date else None,
+                'faculty': user.faculty.name if user.faculty else None,
+                'specialty': user.specialty.name if user.specialty else None,
+                'gender': user.gender,
+                'is_staff': user.is_staff,
+                'is_doc_submitted': user.is_doc_submitted,
+                'is_active': user.is_active,
+                'is_dorm': user.is_dorm
+            }
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
+                'user': user_data,
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
