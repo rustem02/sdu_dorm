@@ -84,18 +84,7 @@ class SubmissionDocuments(models.Model):
     def __str__(self):
         return f"Documents for {self.user.email}"
 
-# class SubmissionDocuments(models.Model):
-#     DOCUMENT_STATUS_CHOICES = (
-#         ('not_submitted', 'Not Submitted'),
-#         ('submitted', 'Submitted'),
-#         ('verified', 'Verified'),
-#     )
-#
-#     user = models.OneToOneField(User, on_delete=models.CASCADE)
-#     statement_status = models.CharField(max_length=12, choices=DOCUMENT_STATUS_CHOICES, default='not_submitted')
-#     photo_status = models.CharField(max_length=12, choices=DOCUMENT_STATUS_CHOICES, default='not_submitted')
-#     form_075_status = models.CharField(max_length=12, choices=DOCUMENT_STATUS_CHOICES, default='not_submitted')
-#     # Повторите для других документов
+
 
 
 class Room(models.Model):
