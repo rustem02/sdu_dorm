@@ -326,14 +326,20 @@ class UserDocumentsByIDView(RetrieveAPIView):
 
 
 
+
 class DocumentVerificationView(generics.UpdateAPIView):
     queryset = SubmissionDocuments.objects.all()
     serializer_class = DocumentVerificationSerializer
-    permission_classes = [IsOwnerOrAdmin]  # Позволяет доступ только администраторам
+    permission_classes = [IsOwnerOrAdmin]
 
     def get_object(self):
-        # Вы можете использовать 'pk' из URL для получения конкретного экземпляра SubmissionDocuments
-        return get_object_or_404(SubmissionDocuments, pk=self.kwargs['pk'])
+        # Получаем email из параметров запроса
+        email = self.request.query_params.get('email')
+        # Получаем пользователя по email
+        user = get_object_or_404(User, email=email)
+        # Возвращаем экземпляр SubmissionDocuments, связанный с этим пользователем
+        return get_object_or_404(SubmissionDocuments, user=user)
+
 
 class SubmissionDocumentsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
