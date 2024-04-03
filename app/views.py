@@ -48,16 +48,6 @@ class RegisterAPIView(APIView):
             return Response({"detail": "User registered successfully. Please check your email to verify."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# class LoginAPIView(APIView):
-#     permission_classes = (AllowAny,)
-#
-#     def post(self, request, *args, **kwargs):
-#         serializer = LoginSerializer(data=request.data)
-#         if serializer.is_valid():
-#             user = serializer.validated_data
-#             token, created = Token.objects.get_or_create(user=user)
-#             return Response({"token": token.key}, status=status.HTTP_200_OK)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # class LoginAPIView(APIView):
@@ -110,6 +100,26 @@ class LoginAPIView(APIView):
 #     def post(self, request):
 #         logout(request)
 #         return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
+
+
+class PasswordResetRequestView(APIView):
+    permission_classes = (AllowAny,)
+    def post(self, request, *args, **kwargs):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Ссылка для сброса пароля отправлена на указанный email."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PasswordResetView(APIView):
+    permission_classes = (AllowAny,)
+    def post(self, request, *args, **kwargs):
+        serializer = PasswordResetSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Пароль успешно изменен."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutAPIView(APIView):
     authentication_classes = [TokenAuthentication]
