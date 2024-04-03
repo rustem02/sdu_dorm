@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib.auth.models import AbstractUser, Group, Permission, BaseUserManager, PermissionsMixin, AbstractBaseUser
 from django.db import models
 from django.conf import settings
@@ -5,6 +7,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
 import uuid
+from django.utils.crypto import get_random_string
 
 class Faculty(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -69,6 +72,19 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reset_tokens')
+    token = models.UUIDField(default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Password reset token for {self.user}"
+
+    def is_valid(self):
+        # Проверьте, что токен был создан не более чем 24 часа назад
+        return (timezone.now() - self.created_at) < timedelta(days=1)
 
 
 class SubmissionDocuments(models.Model):
