@@ -282,8 +282,9 @@ class SubmissionDocumentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionDocuments
         fields = ['statement', 'photo_3x4', 'form_075', 'identity_card_copy']
-        extra_kwargs = {'statement': {'required': False}, 'photo_3x4': {'required': False},
-                        'form_075': {'required': False}, 'identity_card_copy': {'required': False}}
+        extra_kwargs = {'statement': {'required': True}, 'photo_3x4': {'required': True},
+                        'form_075': {'required': True}, 'identity_card_copy': {'required': True}
+                        }
 
     def update(self, instance, validated_data):
         instance.statement = validated_data.get('statement', instance.statement)
@@ -300,11 +301,56 @@ class SubmissionDocumentsSerializer(serializers.ModelSerializer):
 
         return instance
 
-#
-# class DocumentVerificationSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = SubmissionDocuments
-#         fields = ['is_verified', 'admin_comments']
+# получить документы по емайлу, и пост документов, 2 в 1 для админа
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'last_name', 'id_number', 'faculty', 'specialty']
+
+class SubmissionDocumentsSerializerForAdmin(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = SubmissionDocuments
+        fields = ['user','statement', 'photo_3x4', 'form_075', 'identity_card_copy', 'is_verified', 'admin_comments']
+        extra_kwargs = {'statement': {'required': True}, 'photo_3x4': {'required': True},
+                        'form_075': {'required': True}, 'identity_card_copy': {'required': True},
+                        'is_verified': {'required': False}, 'admin_comments': {'required': False}}
+
+    def update(self, instance, validated_data):
+        instance.statement = validated_data.get('statement', instance.statement)
+        instance.photo_3x4 = validated_data.get('photo_3x4', instance.photo_3x4)
+        instance.form_075 = validated_data.get('form_075', instance.form_075)
+        instance.identity_card_copy = validated_data.get('identity_card_copy', instance.identity_card_copy)
+        instance.is_verified = validated_data.get('is_verified', instance.is_verified)
+        instance.admin_comments = validated_data.get('admin_comments', instance.admin_comments)
+        instance.save()
+
+        # Проверка наличия всех документов и обновление статуса в модели User
+        user = instance.user
+        if instance.statement and instance.photo_3x4 and instance.form_075 and instance.identity_card_copy:
+            user.is_doc_submitted = True
+            user.save()
+
+        return instance
+
+
+
+
+# Получить документы для админа
+class GetAllSubmissionDocumentsSerializer(serializers.ModelSerializer):
+    user_data = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SubmissionDocuments
+        fields = ['statement', 'photo_3x4', 'form_075', 'identity_card_copy', 'user_data']
+
+    def get_user_data(self, obj):
+        user = obj.user
+        user_serializer = UserSerializer(user)
+        return user_serializer.data
+
+
 
 channel_layer = get_channel_layer()
 def send_notification(user_id, message):
