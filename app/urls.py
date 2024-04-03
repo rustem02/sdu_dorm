@@ -29,6 +29,10 @@ urlpatterns = [
     path('api/logout/', LogoutAPIView.as_view(), name='logout'),
     path('verify-email/<uuid:verification_code>/', verify_email, name='verify_email'),
 
+    # Reset password
+    path('password-reset-request/', PasswordResetRequestView.as_view(), name='password-reset-request'),
+    path('password-reset/<uuid:token>/', PasswordResetView.as_view(), name='password-reset'),
+
     # Submission documents
     path('api/documents/upload/', SubmissionDocumentsView.as_view(), name='documents-upload'),
     path('api/documents/get/', SubmissionDocumentsListView.as_view(), name='documents-list'),

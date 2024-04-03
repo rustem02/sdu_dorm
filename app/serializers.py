@@ -1,11 +1,15 @@
 # serializers.py
-
+from django.core.mail import send_mail
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from .models import *
 from django.db import transaction
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+
 
 User = get_user_model()
 
@@ -368,3 +372,46 @@ class PaymentSerializer(serializers.ModelSerializer):
         if user.is_dorm:  # Предполагается наличие поля is_paid в модели Booking
             raise serializers.ValidationError("This booking has already been paid for.")
         return value
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        # User = settings.AUTH_USER_MODEL
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Пользователь с таким email не найден.")
+        return value
+
+    def save(self):
+        # User = settings.AUTH_USER_MODEL
+        user = User.objects.get(email=self.validated_data['email'])
+        token = PasswordResetToken.objects.create(user=user).token
+        reset_url = f"http://localhost:8000/password-reset/{token}/"
+        send_mail(
+            'Сброс пароля',
+            f'Перейдите по ссылке для сброса пароля: {reset_url}',
+            settings.DEFAULT_FROM_EMAIL,
+            [self.validated_data['email']],
+            fail_silently=False,
+        )
+
+class PasswordResetSerializer(serializers.Serializer):
+    token = serializers.UUIDField()
+    password = serializers.CharField(style={'input_type': 'password'})
+
+    def validate(self, attrs):
+        try:
+            token = PasswordResetToken.objects.get(token=attrs.get('token'))
+            if token.created_at < timezone.now() - timedelta(hours=24):
+                raise serializers.ValidationError("Токен сброса пароля истек.")
+            return {'user': token.user, 'password': attrs.get('password')}
+        except PasswordResetToken.DoesNotExist:
+            raise serializers.ValidationError("Неверный токен сброса пароля")
+
+    def save(self, **kwargs):
+        user = self.validated_data['user']
+        user.set_password(self.validated_data['password'])
+        user.save()
+        # Удалить использованный токен
+        PasswordResetToken.objects.filter(user=user).delete()
