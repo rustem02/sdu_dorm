@@ -330,9 +330,9 @@ class DocumentVerificationSerializer(serializers.ModelSerializer):
         instance.save()
 
         # Отправляем уведомление пользователю, если документы были проверены
-        if instance.is_verified:
-            message = "Ваши документы были успешно проверены. Теперь вы можете приступать к бронированию."
-            send_notification(instance.user.id, message)
+        # if instance.is_verified:
+        #     message = "Ваши документы были успешно проверены. Теперь вы можете приступать к бронированию."
+        #     send_notification(instance.user.id, message)
 
         return instance
 

@@ -38,7 +38,7 @@ urlpatterns = [
     path('api/documents/get/', SubmissionDocumentsListView.as_view(), name='documents-list'),
     # Нужны права администратора
     path('api/user-documents/<int:pk>/', UserDocumentsByIDView.as_view(), name='user-documents-by-id'),
-    path('api/documents/verify/<int:pk>/', DocumentVerificationView.as_view(), name='document-verification'),
+    path('api/documents/verify/', DocumentVerificationView.as_view(), name='document-verification'),
 
 
     # Booking
