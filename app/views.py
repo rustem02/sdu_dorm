@@ -324,7 +324,20 @@ class UserDocumentsByIDView(RetrieveAPIView):
         self.check_object_permissions(self.request, document)
         return document
 
+# Получить документы по емайлу, админ
+class UserDocumentsByEmailView(RetrieveAPIView):
+    serializer_class = SubmissionDocumentsSerializerForAdmin
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
 
+    def get_object(self):
+        """
+        Возвращает документы пользователя, найденные по email.
+        """
+        email = self.request.query_params.get('email', None)
+        user = get_object_or_404(User, email=email)
+        document = get_object_or_404(SubmissionDocuments, user=user)
+        self.check_object_permissions(self.request, document)
+        return document
 
 
 class DocumentVerificationView(generics.UpdateAPIView):
@@ -377,6 +390,17 @@ class IsAdminUserOrReadOnly(permissions.BasePermission):
             return True
         # Write permissions are only allowed to staff users.
         return request.user and request.user.is_staff
+
+# Получить все документы, админ
+class GetAllSubmissionDocumentsListView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUserOrReadOnly]
+
+    def get(self, request, *args, **kwargs):
+        documents = SubmissionDocuments.objects.all().select_related('user')
+        serializer = GetAllSubmissionDocumentsSerializer(documents, many=True)
+        return Response(serializer.data)
+
+
 
 class NewsListCreateView(generics.ListCreateAPIView):
     queryset = News.objects.all()
