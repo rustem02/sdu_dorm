@@ -1,0 +1,19 @@
+.container-up{
+    width: 60%;
+}
+
+.field-signup, .field-signup:first-child{
+    margin-bottom: 8px;
+}
+
+.field-signup:last-child{
+    margin-bottom: 20px;
+}
+
+.field-signup input{
+    padding: 7px;
+}
+
+.title-content-up h2{
+    margin-bottom: 14px;
+}
