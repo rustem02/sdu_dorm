@@ -343,7 +343,7 @@ class GetAllSubmissionDocumentsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SubmissionDocuments
-        fields = ['statement', 'photo_3x4', 'form_075', 'identity_card_copy', 'user_data']
+        fields = ['statement', 'photo_3x4', 'form_075', 'identity_card_copy', 'is_verified', 'admin_comments', 'user_data']
 
     def get_user_data(self, obj):
         user = obj.user
