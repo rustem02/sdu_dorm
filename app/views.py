@@ -187,7 +187,7 @@ class BookingCreateAPIView(generics.CreateAPIView):
 
 class BookingListView(ListAPIView):
     queryset = Booking.objects.all()
-    serializer_class = BookingSerializer
+    serializer_class = GetBookingSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
