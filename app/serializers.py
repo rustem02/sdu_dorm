@@ -199,6 +199,39 @@ class SeatSerializer(serializers.ModelSerializer):
             return None  # Вместо пустого объекта лучше возвращать None для фильтрации во view
         return representation
 
+
+class UserSerializer(serializers.ModelSerializer):
+    faculty_name = serializers.SerializerMethodField()
+    specialty_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'last_name', 'id_number', 'faculty_name', 'specialty_name']
+
+    def get_faculty_name(self, obj):
+        return obj.faculty.name if obj.faculty else None
+
+    def get_specialty_name(self, obj):
+        return obj.specialty.name if obj.specialty else None
+
+
+class RoomDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Room
+        fields = ['id', 'block', 'room_number']
+
+class GetBookingSerializer(serializers.ModelSerializer):
+    user_data = UserSerializer(source='user', read_only=True)
+    # room_detail = RoomDetailSerializer(source='room', read_only=True)
+    seat_detail = SeatSerializer(source='seat', read_only=True)
+
+    class Meta:
+        model = Booking
+        fields = ['id', 'user_data', 'seat_detail', 'semester_duration']
+        read_only_fields = ('id',)
+
+    # Ваши остальные методы validate и create
+
 class GetSubmissionDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionDocuments
@@ -249,10 +282,12 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     submission_documents = serializers.SerializerMethodField()
     bookings = serializers.SerializerMethodField()
+    faculty_name = serializers.SerializerMethodField()
+    specialty_name = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'birth_date', 'id_number', 'faculty', 'specialty', 'gender', 'submission_documents', 'bookings', 'is_dorm', 'is_doc_submitted']
+        fields = ['email', 'first_name', 'last_name', 'birth_date', 'id_number', 'faculty_name', 'specialty_name', 'gender', 'submission_documents', 'bookings', 'is_dorm', 'is_doc_submitted']
 
     def get_submission_documents(self, obj):
         # Получаем пользователя, который делает запрос
@@ -267,14 +302,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
     def get_bookings(self, obj):
-        request_user = self.context['request'].user
-        # Аналогичная проверка для бронирований
-
         bookings = Booking.objects.filter(user=obj)
         if bookings.exists():
-            return BookingSerializer(bookings, many=True).data
+            return GetBookingSerializer(bookings, many=True, context={'request': self.context['request']}).data
         else:
             return "No bookings made."
+
+    def get_faculty_name(self, obj):
+        return obj.faculty.name if obj.faculty else None
+
+    def get_specialty_name(self, obj):
+        return obj.specialty.name if obj.specialty else None
 
 
 
@@ -302,10 +340,10 @@ class SubmissionDocumentsSerializer(serializers.ModelSerializer):
         return instance
 
 # получить документы по емайлу, и пост документов, 2 в 1 для админа
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['email', 'first_name', 'last_name', 'id_number', 'faculty', 'specialty']
+# class UserSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ['email', 'first_name', 'last_name', 'id_number', 'faculty', 'specialty']
 
 class SubmissionDocumentsSerializerForAdmin(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

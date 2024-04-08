@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'app',
     'rest_framework.authtoken',
     'drf_yasg',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
@@ -58,6 +59,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'sdu_dorm.urls'
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 TEMPLATES = [
     {
