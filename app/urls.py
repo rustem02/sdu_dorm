@@ -35,6 +35,7 @@ urlpatterns = [
 
     # Submission documents
     path('api/documents/upload/', SubmissionDocumentsView.as_view(), name='documents-upload'),
+    path('api/documents/update/', UpdateSubmissionDocumentsView.as_view(), name='documents-upload'),
     path('api/documents/get/', SubmissionDocumentsListView.as_view(), name='documents-list'),
     # получить все документы, админ
     path('api/documents/', GetAllSubmissionDocumentsListView.as_view(), name='submission-documents-list'),
