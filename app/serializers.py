@@ -232,10 +232,19 @@ class GetBookingSerializer(serializers.ModelSerializer):
 
     # Ваши остальные методы validate и create
 
+# добавил user_data для запроса гет документс
 class GetSubmissionDocumentSerializer(serializers.ModelSerializer):
+    user_data = serializers.SerializerMethodField()
+
     class Meta:
         model = SubmissionDocuments
-        fields = '__all__'
+        fields = ['statement', 'photo_3x4', 'form_075', 'identity_card_copy', 'is_verified', 'admin_comments',
+                  'user_data']
+
+    def get_user_data(self, obj):
+        user = obj.user
+        user_serializer = UserSerializer(user)
+        return user_serializer.data
 
 
 class GetUserSerializer(serializers.ModelSerializer):
