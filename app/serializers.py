@@ -342,9 +342,9 @@ class SubmissionDocumentsSerializer(serializers.ModelSerializer):
 
         # Проверка наличия всех документов и обновление статуса в модели User
         user = instance.user
-        if instance.statement and instance.photo_3x4 and instance.form_075 and instance.identity_card_copy:
-            user.is_doc_submitted = True
-            user.save()
+        # if instance.statement and instance.photo_3x4 and instance.form_075 and instance.identity_card_copy:
+        user.is_doc_submitted = True
+        user.save()
 
         return instance
 
