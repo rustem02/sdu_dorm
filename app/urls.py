@@ -76,6 +76,9 @@ urlpatterns = [
     path('api/payment/receipt/', PaymentReceiptAPIView.as_view(), name='payment-receipt'),
     path('api/payment/download-receipt/', DownloadReceiptAPIView.as_view(), name='download-receipt'),
 
+
+    path('api/specialities/', GetAllSpecialitiesView.as_view(), name='specialities'),
+
                   # path('api/rooms/', views.RoomListView.as_view(), name='room-list'),
     #
     # path('api/rooms/<int:block_id>/<int:room_id>/<int:seat_id>/', views.RoomDetailView.as_view(), name='room-detail'),

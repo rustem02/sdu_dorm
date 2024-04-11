@@ -271,6 +271,16 @@ class UserListView(ListAPIView):
         """
         return User.objects.filter(is_active=True)
 
+class GetAllSpecialitiesView(ListAPIView):
+    serializer_class = GetAllSpecialities
+    # permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Возвращает список пользователей.
+        """
+        return Specialty.objects.all()
+
 
 class UserDetailView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]

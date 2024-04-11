@@ -169,6 +169,11 @@ class BookingSerializer(serializers.ModelSerializer):
 #         model = Seat
 #         fields = '__all__'
 
+class GetAllSpecialities(serializers.ModelSerializer):
+    class Meta:
+        model = Specialty
+        fields = '__all__'
+
 class SeatSerializer(serializers.ModelSerializer):
     room_number = serializers.SerializerMethodField()
     block = serializers.SerializerMethodField()
