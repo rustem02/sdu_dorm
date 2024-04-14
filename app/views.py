@@ -474,14 +474,14 @@ class PaymentSuccessAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        # Ваша логика обработки успешной оплаты
+        # логика обработки успешной оплаты
         return JsonResponse({"status": "success", "message": "Payment was successful"})
 
 class PaymentFailAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        # Ваша логика обработки неудачной оплаты
+        # логика обработки неудачной оплаты
         return JsonResponse({"status": "fail", "message": "Payment failed"})
 
 class PaymentReceiptAPIView(APIView):

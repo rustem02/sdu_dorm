@@ -86,7 +86,7 @@ WSGI_APPLICATION = 'sdu_dorm.wsgi.application'
 #     'default': {
 #         'BACKEND': 'channels_redis.core.RedisChannelLayer',
 #         'CONFIG': {
-#             "hosts": [('127.0.0.1', 6379)],  # Укажите конфигурацию вашего Redis сервера
+#             "hosts": [('127.0.0.1', 6379)],
 #         },
 #     },
 # }
