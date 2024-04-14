@@ -169,6 +169,11 @@ class BookingSerializer(serializers.ModelSerializer):
 #         model = Seat
 #         fields = '__all__'
 
+class GetAllSpecialities(serializers.ModelSerializer):
+    class Meta:
+        model = Specialty
+        fields = '__all__'
+
 class SeatSerializer(serializers.ModelSerializer):
     room_number = serializers.SerializerMethodField()
     block = serializers.SerializerMethodField()
@@ -422,10 +427,15 @@ class DocumentVerificationSerializer(serializers.ModelSerializer):
         instance.admin_comments = validated_data.get('admin_comments', instance.admin_comments)
         instance.save()
 
-        # Отправляем уведомление пользователю, если документы были проверены
-        # if instance.is_verified:
-        #     message = "Ваши документы были успешно проверены. Теперь вы можете приступать к бронированию."
-        #     send_notification(instance.user.id, message)
+        if instance.is_verified:
+            send_mail(
+                'Ваши документы проверены',
+                'Ваши документы были успешно проверены. Перейдите на сайт, чтобы приступить к бронированию. ' +
+                'Ссылка на сайт: https://front-deploy-beta.vercel.app/',
+                settings.DEFAULT_FROM_EMAIL,
+                [instance.user.email],
+                fail_silently=False,
+            )
 
         return instance
 
