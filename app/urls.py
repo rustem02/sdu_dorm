@@ -35,6 +35,7 @@ urlpatterns = [
 
     # Submission documents
     path('api/documents/upload/', SubmissionDocumentsView.as_view(), name='documents-upload'),
+    path('api/documents/update/', UpdateSubmissionDocumentsView.as_view(), name='documents-upload'),
     path('api/documents/get/', SubmissionDocumentsListView.as_view(), name='documents-list'),
     # получить все документы, админ
     path('api/documents/', GetAllSubmissionDocumentsListView.as_view(), name='submission-documents-list'),
@@ -74,6 +75,9 @@ urlpatterns = [
     path('api/payment/fail/', PaymentFailAPIView.as_view(), name='payment-fail'),
     path('api/payment/receipt/', PaymentReceiptAPIView.as_view(), name='payment-receipt'),
     path('api/payment/download-receipt/', DownloadReceiptAPIView.as_view(), name='download-receipt'),
+
+
+    path('api/specialities/', GetAllSpecialitiesView.as_view(), name='specialities'),
 
                   # path('api/rooms/', views.RoomListView.as_view(), name='room-list'),
     #

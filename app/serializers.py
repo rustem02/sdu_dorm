@@ -169,6 +169,11 @@ class BookingSerializer(serializers.ModelSerializer):
 #         model = Seat
 #         fields = '__all__'
 
+class GetAllSpecialities(serializers.ModelSerializer):
+    class Meta:
+        model = Specialty
+        fields = '__all__'
+
 class SeatSerializer(serializers.ModelSerializer):
     room_number = serializers.SerializerMethodField()
     block = serializers.SerializerMethodField()
@@ -232,10 +237,19 @@ class GetBookingSerializer(serializers.ModelSerializer):
 
     # Ваши остальные методы validate и create
 
+# добавил user_data для запроса гет документс
 class GetSubmissionDocumentSerializer(serializers.ModelSerializer):
+    user_data = serializers.SerializerMethodField()
+
     class Meta:
         model = SubmissionDocuments
-        fields = '__all__'
+        fields = ['statement', 'photo_3x4', 'form_075', 'identity_card_copy', 'is_verified', 'admin_comments',
+                  'user_data']
+
+    def get_user_data(self, obj):
+        user = obj.user
+        user_serializer = UserSerializer(user)
+        return user_serializer.data
 
 
 class GetUserSerializer(serializers.ModelSerializer):
@@ -333,9 +347,9 @@ class SubmissionDocumentsSerializer(serializers.ModelSerializer):
 
         # Проверка наличия всех документов и обновление статуса в модели User
         user = instance.user
-        if instance.statement and instance.photo_3x4 and instance.form_075 and instance.identity_card_copy:
-            user.is_doc_submitted = True
-            user.save()
+        # if instance.statement and instance.photo_3x4 and instance.form_075 and instance.identity_card_copy:
+        user.is_doc_submitted = True
+        user.save()
 
         return instance
 
@@ -366,9 +380,9 @@ class SubmissionDocumentsSerializerForAdmin(serializers.ModelSerializer):
 
         # Проверка наличия всех документов и обновление статуса в модели User
         user = instance.user
-        if instance.statement and instance.photo_3x4 and instance.form_075 and instance.identity_card_copy:
-            user.is_doc_submitted = True
-            user.save()
+        # if instance.statement and instance.photo_3x4 and instance.form_075 and instance.identity_card_copy:
+        #     user.is_doc_submitted = True
+        user.save()
 
         return instance
 
@@ -413,10 +427,15 @@ class DocumentVerificationSerializer(serializers.ModelSerializer):
         instance.admin_comments = validated_data.get('admin_comments', instance.admin_comments)
         instance.save()
 
-        # Отправляем уведомление пользователю, если документы были проверены
-        # if instance.is_verified:
-        #     message = "Ваши документы были успешно проверены. Теперь вы можете приступать к бронированию."
-        #     send_notification(instance.user.id, message)
+        if instance.is_verified:
+            send_mail(
+                'Ваши документы проверены',
+                'Ваши документы были успешно проверены. Перейдите на сайт, чтобы приступить к бронированию. ' +
+                'Ссылка на сайт: https://front-deploy-beta.vercel.app/',
+                settings.DEFAULT_FROM_EMAIL,
+                [instance.user.email],
+                fail_silently=False,
+            )
 
         return instance
 

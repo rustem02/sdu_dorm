@@ -271,6 +271,16 @@ class UserListView(ListAPIView):
         """
         return User.objects.filter(is_active=True)
 
+class GetAllSpecialitiesView(ListAPIView):
+    serializer_class = GetAllSpecialities
+    # permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Возвращает список пользователей.
+        """
+        return Specialty.objects.all()
+
 
 class UserDetailView(APIView):
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
@@ -376,6 +386,35 @@ class SubmissionDocumentsView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+class UpdateSubmissionDocumentsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            submission_documents = SubmissionDocuments.objects.get(user=user)
+            serializer = SubmissionDocumentsSerializer(submission_documents)
+            return Response(serializer.data)
+        except SubmissionDocuments.DoesNotExist:
+            return Response({"message": "No documents found for the user."}, status=status.HTTP_404_NOT_FOUND)
+
+    def patch(self, request, *args, **kwargs):
+        user = request.user
+        submission_documents = get_object_or_404(SubmissionDocuments, user=user)
+
+        serializer = SubmissionDocumentsSerializer(submission_documents, data=request.data,
+                                                   partial=True)  # partial=True для разрешения частичного обновления
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class IsAdminUserOrReadOnly(permissions.BasePermission):
     """
