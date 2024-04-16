@@ -1,66 +1,25 @@
 #!/bin/bash
 
 echo "deleting old app"
-sudo rm -rf /var/www/sdu_dorm/
+sudo rm -rf /var/www/
 
 echo "creating app folder"
-sudo mkdir -p /var/www/sdu_dorm
+sudo mkdir -p /var/www/sdu_dorm-app 
 
 echo "moving files to app folder"
-sudo cp -R * /var/www/sdu_dorm/ # Используем cp вместо mv, чтобы сохранить исходные файлы
-
-sudo chown -R ubuntu:ubuntu /var/www/sdu_dorm/
+sudo mv  * /var/www/sdu_dorm-app
 
 # Navigate to the app directory
-cd /var/www/sdu_dorm/
+cd /var/www/sdu_dorm-app/
+sudo mv env .env
 
-# Add Python 3.10 PPA
 sudo apt-get update
-sudo add-apt-repository ppa:deadsnakes/ppa -y # Добавлен -y для автоматического подтверждения
-sudo apt-get update
-
-echo "installing python 3.10.2 and pip"
-sudo apt-get install -y python3.10 python3.10-venv # Установка пакета python3.10-venv для создания виртуального окружения
-
-# Create a virtual environment
-echo "Creating a virtual environment"
-sudo python3.10 -m venv venv
-source venv/bin/activate
+echo "installing python and pip"
+sudo apt-get install -y python3 python3-pip
 
 # Install application dependencies from requirements.txt
 echo "Install application dependencies from requirements.txt"
-pip install --upgrade pip
-pip install -r requirements.txt
-pip install wheel
-
-echo "Creating a virtual environment..."
-python3.10 -m venv /var/www/sdu_dorm/venv
-
-# Activate the virtual environment
-source /var/www/sdu_dorm/venv/bin/activate
-
-# Upgrade pip and install wheel first to avoid legacy installations
-pip install --upgrade pip
-pip install wheel
-
-# Install application dependencies from requirements.txt
-echo "Installing application dependencies from requirements.txt..."
-pip install -r /var/www/sdu_dorm/requirements.txt
-
-# Proceed with migrations and static file collection
-echo "Applying database migrations..."
-python /var/www/sdu_dorm/manage.py migrate
-
-echo "Collecting static files..."
-python /var/www/sdu_dorm/manage.py collectstatic --noinput
-
-# Apply migrations
-echo "Applying database migrations"
-python manage.py migrate
-
-# Collect static files
-echo "Collecting static files"
-python manage.py collectstatic --noinput
+sudo pip install -r requirements.txt
 
 # Update and install Nginx if not already installed
 if ! command -v nginx > /dev/null; then
@@ -69,26 +28,22 @@ if ! command -v nginx > /dev/null; then
     sudo apt-get install -y nginx
 fi
 
-# Configure Nginx to act as a reverse proxy
-if [ ! -f /etc/nginx/sites-available/sdu_dorm ]; then
+# Configure Nginx to act as a reverse proxy if not already configured
+if [ ! -f /etc/nginx/sites-available/myapp ]; then
     sudo rm -f /etc/nginx/sites-enabled/default
-    sudo bash -c 'cat > /etc/nginx/sites-available/sdu_dorm <<EOF
+    sudo bash -c 'cat > /etc/nginx/sites-available/myapp <<EOF
 server {
     listen 80;
-    server_name 13.49.18.134;
+    server_name _;
 
     location / {
         include proxy_params;
-        proxy_pass http://unix:/var/www/sdu_dorm/sdu_dorm.sock;
-    }
-
-    location /static/ {
-        alias /var/www/sdu_dorm/static/;
+        proxy_pass http://unix:/var/www/sdu_dorm-app/myapp.sock;
     }
 }
 EOF'
 
-    sudo ln -s /etc/nginx/sites-available/sdu_dorm /etc/nginx/sites-enabled
+    sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled
     sudo systemctl restart nginx
 else
     echo "Nginx reverse proxy configuration already exists."
@@ -96,9 +51,11 @@ fi
 
 # Stop any existing Gunicorn process
 sudo pkill gunicorn
-sudo rm -rf sdu_dorm.sock
+sudo rm -rf myapp.sock
 
-# Start Gunicorn with the Django application
+# # Start Gunicorn with the Django application
+# # Replace 'server:app' with 'yourfile:app' if your Flask instance is named differently.
+# # gunicorn --workers 3 --bind 0.0.0.0:8000 server:app &
 echo "starting gunicorn"
 gunicorn --workers 3 --bind unix:/var/www/sdu_dorm/sdu_dorm.sock sdu_dorm.wsgi:application --daemon
 
