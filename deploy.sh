@@ -31,6 +31,27 @@ pip install --upgrade pip
 pip install -r requirements.txt
 pip install wheel
 
+echo "Creating a virtual environment..."
+python3.10 -m venv /var/www/sdu_dorm/venv
+
+# Activate the virtual environment
+source /var/www/sdu_dorm/venv/bin/activate
+
+# Upgrade pip and install wheel first to avoid legacy installations
+pip install --upgrade pip
+pip install wheel
+
+# Install application dependencies from requirements.txt
+echo "Installing application dependencies from requirements.txt..."
+pip install -r /var/www/sdu_dorm/requirements.txt
+
+# Proceed with migrations and static file collection
+echo "Applying database migrations..."
+python /var/www/sdu_dorm/manage.py migrate
+
+echo "Collecting static files..."
+python /var/www/sdu_dorm/manage.py collectstatic --noinput
+
 # Apply migrations
 echo "Applying database migrations"
 python manage.py migrate
