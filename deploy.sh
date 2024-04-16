@@ -27,7 +27,9 @@ source venv/bin/activate
 
 # Install application dependencies from requirements.txt
 echo "Install application dependencies from requirements.txt"
+pip install --upgrade pip
 pip install -r requirements.txt
+pip install wheel
 
 # Apply migrations
 echo "Applying database migrations"
