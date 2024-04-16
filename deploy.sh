@@ -23,7 +23,7 @@ sudo apt-get install -y python3.10 python3.10-venv # Установка паке
 # Create a virtual environment
 echo "Creating a virtual environment"
 sudo python3.10 -m venv venv
-sudo source venv/bin/activate
+source venv/bin/activate
 
 # Install application dependencies from requirements.txt
 echo "Install application dependencies from requirements.txt"
