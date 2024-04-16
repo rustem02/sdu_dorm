@@ -35,10 +35,11 @@ if ! command -v nginx > /dev/null; then
     sudo apt-get install -y nginx
 fi
 
+sudo rm -f /etc/nginx/sites-available/myapp
+
 # Configure Nginx to act as a reverse proxy if not already configured
 if [ ! -f /etc/nginx/sites-available/myapp ]; then
     sudo rm -f /etc/nginx/sites-enabled/default
-    sudo rm -f /etc/nginx/sites-available/myapp
     sudo bash -c 'cat > /etc/nginx/sites-available/myapp <<EOF
 server {
     listen 80;
