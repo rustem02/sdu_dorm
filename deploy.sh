@@ -23,7 +23,7 @@ sudo apt-get install -y python3.10.4 python3-pip
 
 # Install application dependencies from requirements.txt
 echo "Install application dependencies from requirements.txt"
-sudo python3.10 -m pip install -r requirements.txt
+sudo pip install -r requirements.txt
 
 # Apply migrations
 echo "Applying database migrations"
