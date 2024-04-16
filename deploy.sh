@@ -21,6 +21,13 @@ sudo apt-get install -y python3 python3-pip
 echo "Install application dependencies from requirements.txt"
 sudo pip install -r requirements.txt
 
+echo "Applying database migrations..."
+python manage.py migrate
+
+# Collect static files
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
+
 # Update and install Nginx if not already installed
 if ! command -v nginx > /dev/null; then
     echo "Installing Nginx"
@@ -57,6 +64,6 @@ sudo rm -rf myapp.sock
 # # Replace 'server:app' with 'yourfile:app' if your Flask instance is named differently.
 # # gunicorn --workers 3 --bind 0.0.0.0:8000 server:app &
 echo "starting gunicorn"
-gunicorn --workers 3 --bind unix:/var/www/sdu_dorm/sdu_dorm.sock sdu_dorm.wsgi:application --daemon
+gunicorn --workers 3 --bind unix:/var/www/sdu_dorm/myapp.sock sdu_dorm.wsgi:application --daemon
 
 echo "Deployment is completed 🚀"
