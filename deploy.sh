@@ -9,6 +9,8 @@ sudo mkdir -p /var/www/sdu_dorm
 echo "moving files to app folder"
 sudo cp -R * /var/www/sdu_dorm/ # Используем cp вместо mv, чтобы сохранить исходные файлы
 
+sudo chown -R $EC2_USERNAME:$EC2_USERNAME /var/www/sdu_dorm/
+
 # Navigate to the app directory
 cd /var/www/sdu_dorm/
 
