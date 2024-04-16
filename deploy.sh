@@ -1,38 +1,41 @@
 #!/bin/bash
 
 echo "deleting old app"
-sudo rm -rf /var/www/
+sudo rm -rf /var/www/sdu_dorm/
 
 echo "creating app folder"
 sudo mkdir -p /var/www/sdu_dorm
 
 echo "moving files to app folder"
-sudo mv * /var/www/sdu_dorm
+sudo cp -R * /var/www/sdu_dorm/ # Используем cp вместо mv, чтобы сохранить исходные файлы
 
 # Navigate to the app directory
 cd /var/www/sdu_dorm/
-sudo mv .env .env
 
 # Add Python 3.10 PPA
 sudo apt-get update
-sudo add-apt-repository ppa:deadsnakes/ppa
+sudo add-apt-repository ppa:deadsnakes/ppa -y # Добавлен -y для автоматического подтверждения
 sudo apt-get update
 
 echo "installing python 3.10.2 and pip"
-sudo apt-get install -y python3.10
-sudo apt install python3-pip
+sudo apt-get install -y python3.10 python3.10-venv # Установка пакета python3.10-venv для создания виртуального окружения
+
+# Create a virtual environment
+echo "Creating a virtual environment"
+python3.10 -m venv venv
+source venv/bin/activate
 
 # Install application dependencies from requirements.txt
 echo "Install application dependencies from requirements.txt"
-sudo python3.10 -m pip install -r requirements.txt
+pip install -r requirements.txt
 
 # Apply migrations
 echo "Applying database migrations"
-sudo python3.10 manage.py migrate
+python manage.py migrate
 
 # Collect static files
 echo "Collecting static files"
-sudo python3.10 manage.py collectstatic --noinput
+python manage.py collectstatic --noinput
 
 # Update and install Nginx if not already installed
 if ! command -v nginx > /dev/null; then
@@ -72,5 +75,6 @@ sudo rm -rf sdu_dorm.sock
 
 # Start Gunicorn with the Django application
 echo "starting gunicorn"
-sudo gunicorn --workers 3 --bind unix:sdu_dorm.sock sdu_dorm.wsgi:application --user www-data --group www-data --daemon
-echo "started gunicorn 🚀"
+gunicorn --workers 3 --bind unix:/var/www/sdu_dorm/sdu_dorm.sock sdu_dorm.wsgi:application --daemon
+
+echo "Deployment is completed 🚀"
