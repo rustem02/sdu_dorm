@@ -19,12 +19,12 @@ sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt-get update
 
 echo "installing python 3.10.2 and pip"
-sudo apt-get install -y python3.10.2
+sudo apt-get install -y python3.10
 sudo apt install python3-pip
 
 # Install application dependencies from requirements.txt
 echo "Install application dependencies from requirements.txt"
-sudo pip3 install -r requirements.txt
+sudo python3.10 -m pip install -r requirements.txt
 
 # Apply migrations
 echo "Applying database migrations"
