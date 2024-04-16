@@ -22,11 +22,11 @@ echo "Install application dependencies from requirements.txt"
 sudo pip install -r requirements.txt
 
 echo "Applying database migrations..."
-python manage.py migrate
+sudo python3 manage.py migrate
 
 # Collect static files
 echo "Collecting static files..."
-python manage.py collectstatic --noinput
+sudo python3 manage.py collectstatic --noinput
 
 # Update and install Nginx if not already installed
 if ! command -v nginx > /dev/null; then
