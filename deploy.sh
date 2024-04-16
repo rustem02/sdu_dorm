@@ -19,7 +19,7 @@ sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt-get update
 
 echo "installing python 3.10.2 and pip"
-sudo apt-get install -y python3.10=3.10.2-1ubuntu1~20.04 python3-pip
+sudo apt-get install -y python3.10.4 python3-pip
 
 # Install application dependencies from requirements.txt
 echo "Install application dependencies from requirements.txt"
