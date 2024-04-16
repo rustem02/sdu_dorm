@@ -59,6 +59,7 @@ fi
 # Stop any existing Gunicorn process
 sudo pkill gunicorn
 sudo rm -rf myapp.sock
+sudo rm -f /var/www/sdu_dorm/myapp.sock
 
 # # Start Gunicorn with the Django application
 # # Replace 'server:app' with 'yourfile:app' if your Flask instance is named differently.
