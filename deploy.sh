@@ -46,7 +46,7 @@ if [ ! -f /etc/nginx/sites-available/sdu_dorm ]; then
     sudo bash -c 'cat > /etc/nginx/sites-available/sdu_dorm <<EOF
 server {
     listen 80;
-    server_name _;
+    server_name 13.49.18.134;
 
     location / {
         include proxy_params;
