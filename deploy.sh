@@ -4,13 +4,13 @@ echo "deleting old app"
 sudo rm -rf /var/www/
 
 echo "creating app folder"
-sudo mkdir -p /var/www/sdu_dorm-app 
+sudo mkdir -p /var/www/sdu_dorm
 
 echo "moving files to app folder"
-sudo mv  * /var/www/sdu_dorm-app
+sudo mv  * /var/www/sdu_dorm
 
 # Navigate to the app directory
-cd /var/www/sdu_dorm-app/
+cd /var/www/sdu_dorm/
 sudo mv env .env
 
 sudo apt-get update
@@ -45,7 +45,7 @@ server {
 
     location / {
         include proxy_params;
-        proxy_pass http://unix:/var/www/sdu_dorm-app/myapp.sock;
+        proxy_pass http://unix:/var/www/sdu_dorm/myapp.sock;
     }
 }
 EOF'
