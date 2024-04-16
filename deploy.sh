@@ -24,7 +24,7 @@ sudo apt install python3-pip
 
 # Install application dependencies from requirements.txt
 echo "Install application dependencies from requirements.txt"
-sudo pip install -r requirements.txt
+sudo pip3 install -r requirements.txt
 
 # Apply migrations
 echo "Applying database migrations"
