@@ -1,6 +1,61 @@
-Warning: Install Python 3.10.2 version to your desktop
+# **Предварительные требования**
+## Убедитесь, что на вашем компьютере установлены Python и pip. Проект тестировался с Python 3.10.2.
+
+## **Клонирование репозитория**
+
+    git clone https://github.com/rustem02/sdu_dorm.git
+
+    cd sdu_dorm
+
+## **Установка зависимостей**
+
+    pip install -r requirements.txt
 
 
-1) pip install -r requirements.txt
+## **Применение миграций**
 
-2) python manage.py runserver
+  Примените миграции для настройки базы данных:
+
+    python manage.py migrate
+
+## **Запуск проекта**
+
+  ### Windows:
+
+    python manage.py runserver
+
+
+  ### MacOS/Linux:
+
+    python3 manage.py runserver
+
+
+
+### Дополнительно вы можете отправлять запросы прямо с браузера на этот домен, который запущен на AWS EC2 сервере
+        
+        13.49.18.134
+
+
+# **Важно**
+
+### Чтобы отправлять запросы нужно быть авторизованным, иначе сервер будет возвращать вот это:
+
+        {
+          "detail": "Authentication credentials were not provided."
+        }
+
+
+### Поэтому сначала авторизуйтесь, это можно сделать с помощью __Postman__, отправляете запрос на **http://127.0.0.1:8000/api/login/**, затем получаете __Токен__, скопируйте этот __Токен__ и вставьте его на __Headers__, когда будете делать запрос.
+
+
+
+### Пример:
+
+
+https://github.com/rustem02/sdu_dorm/assets/75470901/9d37f661-9023-4663-97f8-b130e4589e86
+
+
+
+
+
+
