@@ -73,7 +73,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-
+# Модель для обновление пароли
 class PasswordResetToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reset_tokens')
     token = models.UUIDField(default=uuid.uuid4, editable=False)
@@ -83,10 +83,10 @@ class PasswordResetToken(models.Model):
         return f"Password reset token for {self.user}"
 
     def is_valid(self):
-        # Проверьте, что токен был создан не более чем 24 часа назад
+        # Проверка, что токен был создан не более чем 24 часа назад
         return (timezone.now() - self.created_at) < timedelta(days=1)
 
-
+# модель Документов
 class SubmissionDocuments(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='submission_documents')
     statement = models.FileField(upload_to='documents/statement/', null=True, blank=True)
@@ -102,7 +102,7 @@ class SubmissionDocuments(models.Model):
 
 
 
-
+# Модель Комнат
 class Room(models.Model):
     BLOCK_CHOICES = (
         ('A', 'Block A'),
@@ -120,7 +120,7 @@ class Room(models.Model):
     def __str__(self):
         return f'{self.block} - Room {self.room_number}'
 
-
+# Модель месты в комнате
 class Seat(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='seats')
     seat_number = models.IntegerField()
@@ -129,6 +129,7 @@ class Seat(models.Model):
     def __str__(self):
         return f'Seat {self.seat_number} in {self.room}'
 
+# Модель Брони
 class Booking(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='bookings')
@@ -157,6 +158,7 @@ class Booking(models.Model):
     #         booking.save()
 
 
+# Не используемый модель, надо будет удалить
 class Payment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='payments', null=True, blank=True)
@@ -175,6 +177,7 @@ class Payment(models.Model):
     def __str__(self):
         return f'Payment for Booking ID {self.booking.id} by {self.user.email}'
 
+# Не используемые модели, надо удалить
 class Transaction(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='transactions', null=True, blank=True)
@@ -188,6 +191,7 @@ class Transaction(models.Model):
         return f'Payment for Booking ID {self.booking.id} by {self.user.email}'
 
 
+# Модель Оплаты
 class DefaultPayment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='defaultpayment')
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='defaultpayment', null=True, blank=True)
@@ -201,6 +205,7 @@ class DefaultPayment(models.Model):
     def __str__(self):
         return f'Payment for Booking ID {self.booking.id} by {self.user.email}'
 
+# Модель Новостной статьи
 class News(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
@@ -219,6 +224,7 @@ class News(models.Model):
     def __str__(self):
         return self.title
 
+# Модель для комментов, надо доделать
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
     comment = models.TextField()
@@ -230,6 +236,7 @@ class Review(models.Model):
 
 User = get_user_model()
 
+# класс для email верификации
 class EmailVerification(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='email_verification')
     verification_code = models.UUIDField(default=uuid.uuid4, editable=False)

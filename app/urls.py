@@ -79,17 +79,7 @@ urlpatterns = [
 
     path('api/specialities/', GetAllSpecialitiesView.as_view(), name='specialities'),
 
-                  # path('api/rooms/', views.RoomListView.as_view(), name='room-list'),
-    #
-    # path('api/rooms/<int:block_id>/<int:room_id>/<int:seat_id>/', views.RoomDetailView.as_view(), name='room-detail'),
-    #
-    # path('api/bookings/', views.BookingListView.as_view(), name='booking-list'),
-    #
-    # path('api/bookings/<int:pk>/', views.BookingDetailView.as_view(), name='booking-detail'),
-    #
-    # path('api/payments/', views.PaymentListView.as_view(), name='payment-list'),
-    #
-    # path('api/payments/<int:user_id>/', views.PaymentDetailView.as_view(), name='payment-detail'),
+
     #
     # path('api/news/', views.NewsListView.as_view(), name='news-list'),
     #
