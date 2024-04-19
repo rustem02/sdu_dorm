@@ -64,7 +64,6 @@ sudo rm -rf myapp.sock
 sudo rm -f /var/www/sdu_dorm/myapp.sock
 
 # # Start Gunicorn with the Django application
-# # Replace 'server:app' with 'yourfile:app' if your Flask instance is named differently.
 # # gunicorn --workers 3 --bind 0.0.0.0:8000 server:app &
 echo "starting gunicorn"
 sudo gunicorn --workers 3 --bind unix:/var/www/sdu_dorm/myapp.sock sdu_dorm.wsgi:application --daemon
