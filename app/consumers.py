@@ -24,7 +24,7 @@
 #         return serializer.data
 
 
-
+# Это для работы с вебсокетом, для получение мест и уведомлении
 
 
 # from rest_framework.authtoken.models import Token
