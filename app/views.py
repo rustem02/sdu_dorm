@@ -50,19 +50,6 @@ class RegisterAPIView(APIView):
 
 
 
-# class LoginAPIView(APIView):
-#     permission_classes = (AllowAny,)
-#
-#     def post(self, request, *args, **kwargs):
-#         serializer = LoginSerializer(data=request.data)
-#         if serializer.is_valid():
-#             user = serializer.validated_data
-#             refresh = RefreshToken.for_user(user)
-#             return Response({
-#                 'refresh': str(refresh),
-#                 'access': str(refresh.access_token),
-#             }, status=status.HTTP_200_OK)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginAPIView(APIView):
     permission_classes = (AllowAny,)
@@ -277,7 +264,10 @@ class GetAllSpecialitiesView(ListAPIView):
 
     def get_queryset(self):
         """
-        Возвращает список пользователей.
+
+        Возвращает список профессии.
+
+
         """
         return Specialty.objects.all()
 
@@ -474,14 +464,14 @@ class PaymentSuccessAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        # Ваша логика обработки успешной оплаты
+        # логика обработки успешной оплаты
         return JsonResponse({"status": "success", "message": "Payment was successful"})
 
 class PaymentFailAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        # Ваша логика обработки неудачной оплаты
+        # логика обработки неудачной оплаты
         return JsonResponse({"status": "fail", "message": "Payment failed"})
 
 class PaymentReceiptAPIView(APIView):

@@ -35,7 +35,6 @@ application = get_asgi_application()
 # # django.setup()
 # # application = ProtocolTypeRouter({
 # #     "http": get_asgi_application(),
-# #     # Путь к вашим маршрутам WebSocket может выглядеть примерно так
 # #     "websocket": AuthMiddlewareStack(
 # #         URLRouter(
 # #             sdu_dorm.routing.websocket_urlpatterns

@@ -31,7 +31,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             faculty=validated_data['faculty'],
             specialty=validated_data['specialty'],
             gender=validated_data['gender'],
-            # Можно добавить остальные поля
+
         )
         EmailVerification.objects.create(user=user)  # Создание объекта EmailVerification
         return user
@@ -193,7 +193,7 @@ class SeatSerializer(serializers.ModelSerializer):
         if obj.is_reserved:
             booking = obj.bookings.filter(is_active=True).first()  # Предполагаем, что активное бронирование может быть только одно
             if booking:
-                return booking.user.email  # Или любая другая информация о пользователе, которая вам нужна
+                return booking.user.email  # Или любая другая информация о пользователе
         return None
 
     def to_representation(self, instance):
@@ -201,7 +201,7 @@ class SeatSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if (user.gender == 'Male' and instance.room.block not in ['C', 'D']) or \
            (user.gender == 'Female' and instance.room.block not in ['A', 'B']):
-            return None  # Вместо пустого объекта лучше возвращать None для фильтрации во view
+            return None  # Вместо пустого объекта лучше возвращать None для фильтрации во view, надо допилить;)
         return representation
 
 
@@ -235,7 +235,7 @@ class GetBookingSerializer(serializers.ModelSerializer):
         fields = ['id', 'user_data', 'seat_detail', 'semester_duration']
         read_only_fields = ('id',)
 
-    # Ваши остальные методы validate и create
+
 
 # добавил user_data для запроса гет документс
 class GetSubmissionDocumentSerializer(serializers.ModelSerializer):

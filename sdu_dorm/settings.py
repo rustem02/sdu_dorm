@@ -86,7 +86,7 @@ WSGI_APPLICATION = 'sdu_dorm.wsgi.application'
 #     'default': {
 #         'BACKEND': 'channels_redis.core.RedisChannelLayer',
 #         'CONFIG': {
-#             "hosts": [('127.0.0.1', 6379)],  # Укажите конфигурацию вашего Redis сервера
+#             "hosts": [('127.0.0.1', 6379)],
 #         },
 #     },
 # }
@@ -119,7 +119,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     )
 }
-# Настройки для разработки (используя консольный бэкенд)
+# Настройки для разработки (используя smtp бэкенд)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
