@@ -264,7 +264,10 @@ class GetAllSpecialitiesView(ListAPIView):
 
     def get_queryset(self):
         """
+
         Возвращает список профессии.
+
+
         """
         return Specialty.objects.all()
 
