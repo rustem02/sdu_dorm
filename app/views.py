@@ -553,3 +553,29 @@ class DownloadReceiptAPIView(APIView):
             return HttpResponse("Нет записей об оплате", status=404)
 
 
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            user = request.user
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            return Response({"message": "Пароль успешно изменен."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class ReviewListView(generics.ListCreateAPIView):
+    queryset = Review.objects.all().select_related('user').prefetch_related('replies')
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return CreateReviewSerializer
+        return ReviewSerializer

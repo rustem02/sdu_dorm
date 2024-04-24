@@ -80,7 +80,12 @@ urlpatterns = [
     path('api/specialities/', GetAllSpecialitiesView.as_view(), name='specialities'),
 
 
-    #
+    path('api/change-password/', ChangePasswordView.as_view(), name='change-password'),
+
+
+    path('api/review/', ReviewListView.as_view(), name='review-list'),
+
+                  #
     # path('api/news/', views.NewsListView.as_view(), name='news-list'),
     #
     # path('api/news/<int:pk>/', views.NewsDetailView.as_view(), name='news-detail'),
