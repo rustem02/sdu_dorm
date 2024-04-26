@@ -264,7 +264,10 @@ class GetAllSpecialitiesView(ListAPIView):
 
     def get_queryset(self):
         """
+
         Возвращает список профессии.
+
+
         """
         return Specialty.objects.all()
 
@@ -403,6 +406,20 @@ class UpdateSubmissionDocumentsView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class PartialDocumentDeletionView(generics.UpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = DocumentDeletionSerializer
+
+    def get_object(self):
+        # берем пользователя
+        user = self.request.user
+        # находим документы
+        return get_object_or_404(SubmissionDocuments, user=user)
+
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
+
 class IsAdminUserOrReadOnly(permissions.BasePermission):
     """
     Object-level permission to only allow admins to edit it.
@@ -446,6 +463,32 @@ class NewsUpdateView(generics.RetrieveUpdateAPIView):
         serializer.save()  # Additional actions can be performed here
 
 
+class NewsDetailView(generics.RetrieveAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [IsAdminUserOrReadOnly, permissions.IsAuthenticated]
+
+    def get_object(self):
+        """
+        получение новости по ID.
+        """
+        id = self.kwargs.get('pk')  # ID
+        news = get_object_or_404(News, pk=id)  # news or 404
+        return news
+
+
+class NewsListView(generics.RetrieveAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        """
+        получение новости по ID.
+        """
+
+        news = News.objects.all()
+        return news
 
 class PaymentAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -553,3 +596,29 @@ class DownloadReceiptAPIView(APIView):
             return HttpResponse("Нет записей об оплате", status=404)
 
 
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            user = request.user
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            return Response({"message": "Пароль успешно изменен."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class ReviewListView(generics.ListCreateAPIView):
+    queryset = Review.objects.all().select_related('user').prefetch_related('replies')
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return CreateReviewSerializer
+        return ReviewSerializer

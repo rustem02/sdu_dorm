@@ -225,10 +225,23 @@ class News(models.Model):
         return self.title
 
 # Модель для комментов, надо доделать
+# class Review(models.Model):
+#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+#     comment = models.TextField()
+#     datePublished = models.DateField(auto_now_add=True,)
+#
+#     def __str__(self):
+#         return f'Review by {self.user.email}'
+
+
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
     comment = models.TextField()
-    datePublished = models.DateField(auto_now_add=True,)
+    datePublished = models.DateField(auto_now_add=True)
+    rate = models.IntegerField(default=1, choices=[(i, str(i)) for i in range(1, 6)], help_text="Rating from 1 to 5")
+    likes = models.PositiveIntegerField(default=0, help_text="Number of likes")
+    # ForeignKey на самого себя для ответов
+    reply_to = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
 
     def __str__(self):
         return f'Review by {self.user.email}'

@@ -9,6 +9,7 @@ from asgiref.sync import async_to_sync
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth import password_validation
 
 
 User = get_user_model()
@@ -353,11 +354,20 @@ class SubmissionDocumentsSerializer(serializers.ModelSerializer):
 
         return instance
 
-# получить документы по емайлу, и пост документов, 2 в 1 для админа
-# class UserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = ['email', 'first_name', 'last_name', 'id_number', 'faculty', 'specialty']
+
+class DocumentDeletionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubmissionDocuments
+        fields = ['statement', 'photo_3x4', 'form_075', 'identity_card_copy']
+
+    def update(self, instance, validated_data):
+        # обновляем только те поля которые удаляемz
+        for field_name in self.fields:
+            if validated_data.get(field_name) is None:
+                setattr(instance, field_name, None)
+        instance.save()
+        return instance
+
 
 class SubmissionDocumentsSerializerForAdmin(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -518,3 +528,45 @@ class PasswordResetSerializer(serializers.Serializer):
         user.save()
         # Удалить использованный токен
         PasswordResetToken.objects.filter(user=user).delete()
+
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    confirm_new_password = serializers.CharField(required=True)
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Неверный текущий пароль.")
+        return value
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_new_password']:
+            raise serializers.ValidationError({"confirm_new_password": "Новые пароли не совпадают."})
+        password_validation.validate_password(data['new_password'], self.context['request'].user)
+        return data
+
+
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    user_data = serializers.SerializerMethodField()
+    class Meta:
+        model = Review
+        fields = ['id', 'user_data', 'comment', 'datePublished', 'rate', 'likes', 'reply_to']
+
+    def get_user_data(self, obj):
+        user = obj.user
+        user_serializer = UserSerializer(user)
+        return user_serializer.data
+
+class CreateReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['comment', 'rate', 'reply_to']
+
+    def create(self, validated_data):
+        # надо добавить дополнительную логику отправку уведомлений!!
+        return Review.objects.create(**validated_data, user=self.context['request'].user)
