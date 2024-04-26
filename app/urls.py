@@ -37,8 +37,10 @@ urlpatterns = [
     path('api/documents/upload/', SubmissionDocumentsView.as_view(), name='documents-upload'),
     path('api/documents/update/', UpdateSubmissionDocumentsView.as_view(), name='documents-upload'),
     path('api/documents/get/', SubmissionDocumentsListView.as_view(), name='documents-list'),
-    path('api/documents/delete/', PartialDocumentDeletionView.as_view(), name='partial-document-deletion'),
-    # получить все документы, админ
+    # path('api/documents/delete/', DeleteDocumentFileView.as_view(), name='partial-document-deletion'),
+    path('api/delete-document/<str:file_field>/', DeleteDocumentFileView.as_view(), name='delete-document-file'),
+
+                  # получить все документы, админ
     path('api/documents/', GetAllSubmissionDocumentsListView.as_view(), name='submission-documents-list'),
     # Нужны права администратора
     path('api/user-documents/<int:pk>/', UserDocumentsByIDView.as_view(), name='user-documents-by-id'),

@@ -406,18 +406,20 @@ class UpdateSubmissionDocumentsView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PartialDocumentDeletionView(generics.UpdateAPIView):
+class DeleteDocumentFileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = DocumentDeletionSerializer
 
-    def get_object(self):
-        # берем пользователя
-        user = self.request.user
-        # находим документы
-        return get_object_or_404(SubmissionDocuments, user=user)
+    def delete(self, request, file_field):
+        user = request.user
+        document = get_object_or_404(SubmissionDocuments, user=user)
 
-    def patch(self, request, *args, **kwargs):
-        return super().patch(request, *args, **kwargs)
+        if hasattr(document, file_field) and getattr(document, file_field):
+            getattr(document, file_field).delete()
+            setattr(document, file_field, None)
+            document.save()
+            return Response({'message': f'{file_field} deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({'error': 'File not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class IsAdminUserOrReadOnly(permissions.BasePermission):
