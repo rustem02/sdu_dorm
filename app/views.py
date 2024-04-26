@@ -406,6 +406,20 @@ class UpdateSubmissionDocumentsView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class PartialDocumentDeletionView(generics.UpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = DocumentDeletionSerializer
+
+    def get_object(self):
+        # берем пользователя
+        user = self.request.user
+        # находим документы
+        return get_object_or_404(SubmissionDocuments, user=user)
+
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
+
 class IsAdminUserOrReadOnly(permissions.BasePermission):
     """
     Object-level permission to only allow admins to edit it.
@@ -449,6 +463,32 @@ class NewsUpdateView(generics.RetrieveUpdateAPIView):
         serializer.save()  # Additional actions can be performed here
 
 
+class NewsDetailView(generics.RetrieveAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [IsAdminUserOrReadOnly, permissions.IsAuthenticated]
+
+    def get_object(self):
+        """
+        получение новости по ID.
+        """
+        id = self.kwargs.get('pk')  # ID
+        news = get_object_or_404(News, pk=id)  # news or 404
+        return news
+
+
+class NewsListView(generics.RetrieveAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        """
+        получение новости по ID.
+        """
+
+        news = News.objects.all()
+        return news
 
 class PaymentAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]

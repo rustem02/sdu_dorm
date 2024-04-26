@@ -37,6 +37,7 @@ urlpatterns = [
     path('api/documents/upload/', SubmissionDocumentsView.as_view(), name='documents-upload'),
     path('api/documents/update/', UpdateSubmissionDocumentsView.as_view(), name='documents-upload'),
     path('api/documents/get/', SubmissionDocumentsListView.as_view(), name='documents-list'),
+    path('api/documents/delete/', PartialDocumentDeletionView.as_view(), name='partial-document-deletion'),
     # получить все документы, админ
     path('api/documents/', GetAllSubmissionDocumentsListView.as_view(), name='submission-documents-list'),
     # Нужны права администратора
@@ -64,6 +65,7 @@ urlpatterns = [
     # news
     path('news/', NewsListCreateView.as_view(), name='news-list-create'),
     path('news/<int:pk>/', NewsUpdateView.as_view(), name='news-update'),
+    path('news-detail/<int:pk>/', NewsDetailView.as_view(), name='news-detail'),
 
     # Profile
     path('api/profile/', ProfileView.as_view(), name='user-profile'),

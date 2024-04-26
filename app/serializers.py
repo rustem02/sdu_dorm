@@ -354,11 +354,20 @@ class SubmissionDocumentsSerializer(serializers.ModelSerializer):
 
         return instance
 
-# получить документы по емайлу, и пост документов, 2 в 1 для админа
-# class UserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = ['email', 'first_name', 'last_name', 'id_number', 'faculty', 'specialty']
+
+class DocumentDeletionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubmissionDocuments
+        fields = ['statement', 'photo_3x4', 'form_075', 'identity_card_copy']
+
+    def update(self, instance, validated_data):
+        # обновляем только те поля которые удаляемz
+        for field_name in self.fields:
+            if validated_data.get(field_name) is None:
+                setattr(instance, field_name, None)
+        instance.save()
+        return instance
+
 
 class SubmissionDocumentsSerializerForAdmin(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
