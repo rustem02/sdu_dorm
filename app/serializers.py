@@ -52,58 +52,6 @@ class LoginSerializer(serializers.Serializer):
 
 
 
-# class BookingSerializer(serializers.ModelSerializer):
-#     room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all())
-#     seat = serializers.PrimaryKeyRelatedField(queryset=Seat.objects.all())
-#
-#     class Meta:
-#         model = Booking
-#         fields = ['user', 'room', 'seat', 'semester_duration']
-#         read_only_fields = ('user',)
-#
-#     def validate(self, data):
-#         """
-#         Проверяем, что место принадлежит выбранной комнате.
-#         """
-#         room = data.get('room')
-#         seat = data.get('seat')
-#         user = self.context['request'].user
-#         if seat.room != room:
-#             raise serializers.ValidationError("The seat does not belong to the selected room.")
-#         if seat.is_reserved:
-#             raise serializers.ValidationError("This seat is already reserved.")
-#         # if data['seat'].is_reserved:
-#         #     raise serializers.ValidationError("This seat is already reserved.")
-#         if Booking.objects.filter(user=user, is_active=True).exists():
-#             raise serializers.ValidationError("You have already booked a seat.")
-#         if not user.submission_documents.is_verified:
-#             raise serializers.ValidationError("Your documents have not been verified yet.")
-#         # return data
-#         return data
-#
-#     def create(self, validated_data):
-#         with transaction.atomic():
-#             # Remove the 'user' key from validated_data if it exists to avoid conflicts
-#             validated_data.pop('user', None)
-#
-#             # Explicitly set the user to the request user from the context
-#             user = self.context['request'].user
-#
-#             # Set the seat as reserved
-#             seat = validated_data['seat']
-#             if not seat.is_reserved:
-#                 seat.is_reserved = True
-#                 seat.save()
-#             else:
-#                 raise serializers.ValidationError({"seat": "This seat is already reserved."})
-#
-#             # Check documents and create the booking
-#             if not user.is_doc_submitted or not user.submission_documents.is_verified:
-#                 raise serializers.ValidationError("Your documents are not verified or submitted.")
-#
-#             booking = Booking.objects.create(**validated_data, user=user)
-#
-#         return booking
 
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -192,7 +140,7 @@ class SeatSerializer(serializers.ModelSerializer):
 
     def get_reserved_by(self, obj):
         if obj.is_reserved:
-            booking = obj.bookings.filter(is_active=True).first()  # Предполагаем, что активное бронирование может быть только одно
+            booking = obj.bookings.filter(is_active=True).first()  # активное бронирование может быть только одно
             if booking:
                 return booking.user.email  # Или любая другая информация о пользователе
         return None
@@ -466,8 +414,8 @@ class PaymentSerializer(serializers.ModelSerializer):
         fields = ['amount', 'booking']
 
     def create(self, validated_data):
-        user = self.context['request'].user  # Получаем пользователя из контекста запроса
-        validated_data['user'] = user  # Добавляем пользователя в данные для создания объекта
+        user = self.context['request'].user  # Получаем пользователя
+        validated_data['user'] = user  # Добавляем пользователя для объекта
         payment = DefaultPayment.objects.create(**validated_data)
 
         user.is_dorm = True
@@ -475,14 +423,10 @@ class PaymentSerializer(serializers.ModelSerializer):
         return payment
 
     def validate_booking(self, value):
-        """
-        Добавьте кастомную валидацию для проверки, принадлежит ли бронирование пользователю
-        и не оплачено ли оно уже.
-        """
         user = self.context['request'].user
         if value.user != user:
             raise serializers.ValidationError("This booking does not belong to the current user.")
-        if user.is_dorm:  # Предполагается наличие поля is_paid в модели Booking
+        if user.is_dorm:
             raise serializers.ValidationError("This booking has already been paid for.")
         return value
 

@@ -57,9 +57,9 @@ urlpatterns = [
     path('api/available-seats/', AvailableSeatsListView.as_view(), name='available-seats'),
     path('api/rooms/', AvailableSeatsAPIView.as_view(), name='available-rooms'),
 
-                  # path('book_room/<int:room_id>/', book_room, name='book_room'),
 
 
+    # Users
     path('api/users/', UserListView.as_view(), name='user-list'),
     # по эмайлу пользователя
     path('api/user-details/', UserDetailView.as_view(), name='user-details'),
@@ -80,23 +80,15 @@ urlpatterns = [
     path('api/payment/receipt/', PaymentReceiptAPIView.as_view(), name='payment-receipt'),
     path('api/payment/download-receipt/', DownloadReceiptAPIView.as_view(), name='download-receipt'),
 
-
+    # Specialities
     path('api/specialities/', GetAllSpecialitiesView.as_view(), name='specialities'),
 
-
+    # Change pass
     path('api/change-password/', ChangePasswordView.as_view(), name='change-password'),
 
-
+    # Review - отзыв
     path('api/review/', ReviewListView.as_view(), name='review-list'),
-
-                  #
-    # path('api/news/', views.NewsListView.as_view(), name='news-list'),
-    #
-    # path('api/news/<int:pk>/', views.NewsDetailView.as_view(), name='news-detail'),
-    #
-    # path('api/reviews/', views.ReviewListView.as_view(), name='review-list'),
-    #
-    # path('api/reviews/<int:user_id>/', views.ReviewDetailView.as_view(), name='review-detail'),
+    # для swagger, не нужен
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
