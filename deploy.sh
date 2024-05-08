@@ -44,6 +44,7 @@ if [ ! -f /etc/nginx/sites-available/myapp ]; then
 server {
     listen 80;
     server_name _;
+    client_max_body_size 50M;
 
     location / {
         include proxy_params;
