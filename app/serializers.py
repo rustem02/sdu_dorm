@@ -444,7 +444,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         # User = settings.AUTH_USER_MODEL
         user = User.objects.get(email=self.validated_data['email'])
         token = PasswordResetToken.objects.create(user=user).token
-        reset_url = f"http://localhost:8000/password-reset/{token}/"
+        reset_url = f"http://13.49.18.134/password-reset/{token}/"
         send_mail(
             'Сброс пароля',
             f'Перейдите по ссылке для сброса пароля: {reset_url}',
