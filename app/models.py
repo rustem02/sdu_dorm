@@ -150,12 +150,7 @@ class Booking(models.Model):
     def __str__(self):
         return f'Booking by {self.user.email} for {self.semester_duration} semester(s)'
 
-    # def release_seats(self):
-    #     for booking in Booking.objects.filter(end_date__lt=timezone.now(), is_active=True):
-    #         booking.seat.is_reserved = False
-    #         booking.seat.save()
-    #         booking.is_active = False
-    #         booking.save()
+
 
 
 # Не используемый модель, надо будет удалить
@@ -224,14 +219,6 @@ class News(models.Model):
     def __str__(self):
         return self.title
 
-# Модель для комментов, надо доделать
-# class Review(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
-#     comment = models.TextField()
-#     datePublished = models.DateField(auto_now_add=True,)
-#
-#     def __str__(self):
-#         return f'Review by {self.user.email}'
 
 
 class Review(models.Model):
