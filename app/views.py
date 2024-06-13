@@ -213,12 +213,12 @@ class AvailableSeatsListView(ListAPIView):
     def get(self, request, *args, **kwargs):
         user = request.user
         # Добавляем проверки состояния документов пользователя
-        if not user.is_doc_submitted:
-            return Response({"error": "You need to submit your documents before making a booking."},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        if not user.submission_documents.is_verified:
-            return Response({"error": "Your documents have not been verified yet."}, status=status.HTTP_400_BAD_REQUEST)
+        # if not user.is_doc_submitted:
+        #     return Response({"error": "You need to submit your documents before making a booking."},
+        #                     status=status.HTTP_400_BAD_REQUEST)
+        #
+        # if not user.submission_documents.is_verified:
+        #     return Response({"error": "Your documents have not been verified yet."}, status=status.HTTP_400_BAD_REQUEST)
 
         queryset = Seat.objects.filter(is_reserved=False)
         serializer = SeatSerializer(queryset, many=True, context={'request': request})
