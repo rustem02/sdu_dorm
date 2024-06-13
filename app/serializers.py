@@ -444,7 +444,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         # User = settings.AUTH_USER_MODEL
         user = User.objects.get(email=self.validated_data['email'])
         token = PasswordResetToken.objects.create(user=user).token
-        reset_url = f"http://localhost:8000/password-reset/{token}/"
+        reset_url = f"http://13.49.18.134/password-reset/{token}/"
         send_mail(
             'Сброс пароля',
             f'Перейдите по ссылке для сброса пароля: {reset_url}',
@@ -514,3 +514,25 @@ class CreateReviewSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # надо добавить дополнительную логику отправку уведомлений!!
         return Review.objects.create(**validated_data, user=self.context['request'].user)
+
+
+# class UserUpdateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ['first_name', 'last_name', 'birth_date', 'faculty', 'specialty']
+#
+#     def update(self, instance, validated_data):
+#         instance.first_name = validated_data.get('first_name', instance.first_name)
+#         instance.last_name = validated_data.get('last_name', instance.last_name)
+#         instance.birth_date = validated_data.get('birth_date', instance.birth_date)
+#
+#         faculty_id = validated_data.get('faculty')
+#         if faculty_id:
+#             instance.faculty = Faculty.objects.filter(id=faculty_id).first()
+#
+#         specialty_id = validated_data.get('specialty')
+#         if specialty_id:
+#             instance.specialty = Specialty.objects.filter(id=specialty_id).first()
+#
+#         instance.save()
+#         return instance
