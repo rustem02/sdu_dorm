@@ -514,3 +514,25 @@ class CreateReviewSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # надо добавить дополнительную логику отправку уведомлений!!
         return Review.objects.create(**validated_data, user=self.context['request'].user)
+
+
+# class UserUpdateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ['first_name', 'last_name', 'birth_date', 'faculty', 'specialty']
+#
+#     def update(self, instance, validated_data):
+#         instance.first_name = validated_data.get('first_name', instance.first_name)
+#         instance.last_name = validated_data.get('last_name', instance.last_name)
+#         instance.birth_date = validated_data.get('birth_date', instance.birth_date)
+#
+#         faculty_id = validated_data.get('faculty')
+#         if faculty_id:
+#             instance.faculty = Faculty.objects.filter(id=faculty_id).first()
+#
+#         specialty_id = validated_data.get('specialty')
+#         if specialty_id:
+#             instance.specialty = Specialty.objects.filter(id=specialty_id).first()
+#
+#         instance.save()
+#         return instance
